@@ -209,7 +209,7 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
     storiesDone: closedStories.size, storiesInProgress: inProgress.size,
     storiesPct: stories.length ? Math.round((closedStories.size / stories.length) * 100) : null,
     tasks, tasksPct: tasks.total ? Math.round((tasks.done / tasks.total) * 100) : null,
-    changes: { total: changes.length, archived: changes.length - active.length, active: active.length, revisions: changes.filter((c) => c.revision > 1).length },
+    changes: { total: changes.length, archived: changes.length - active.length, active: active.length, revisions: changes.filter((c) => c.revision > 1).length, doneUnarchived: active.filter((c) => c.state === 'done').length },
     bridgeRuns: ledger.length,
     decisions: { total: decisions.entries.length, byKind, overrides: decisions.entries.filter((e) => e.type === 'overrides' || e.type === 'override').length, changes: decisions.entries.filter((e) => e.type === 'change' || e.kind === 'change-proposal').length },
     dates: { first: dates[0] || null, last: dates.at(-1) || null, days: daysBetween(dates[0], dates.at(-1)), phases: phaseDates },

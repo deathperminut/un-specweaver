@@ -111,7 +111,11 @@ Ofrecelas al cerrar, no las impongas.
 1. Marca las casillas de `tasks.md` que quedaron hechas de verdad
 2. `npx @fission-ai/openspec validate --all --strict`
 3. Registra las decisiones de implementacion que no son obvias desde el codigo (ver "Memoria" abajo)
-4. `openspec archive <change-id>` cuando este entregado — eso mueve el delta al spec principal
+4. **Cierra la story**: `npx un-specweaver close <change-id>`. Valida y archiva; el delta pasa a
+   `openspec/specs/` y se vuelve la linea base. **No es opcional ni "cuando este entregado"**: una
+   story terminada sin cerrar deja a `/sw:change` sin contra que medir. Si decides no cerrar
+   (por ejemplo, la story espera revision), dilo explicitamente y por que; `doctor` lo va a
+   seguir marcando hasta que se cierre
 5. El hook de graphify reconstruye el grafo al commitear. Si no commiteaste todavia, `graphify update .`
    para que el siguiente change vea el codigo nuevo
 

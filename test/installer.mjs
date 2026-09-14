@@ -208,9 +208,9 @@ test('renderAction imprime rutas relativas al proyecto, no absolutas', () => {
 const LAYER = path.join(ROOT, 'src', 'layer');
 const CMDS = fs.readdirSync(path.join(LAYER, 'commands', 'es')).map((f) => f.replace(/\.md$/, '')).sort();
 
-test('existen los diez comandos, en los dos idiomas', () => {
+test('existen los once comandos, en los dos idiomas', () => {
   // bug y change son flujos separados a proposito: uno cambia lo acordado, el otro no.
-  assert.deepEqual(CMDS, ['adopt', 'bug', 'build', 'change', 'doctor', 'new', 'sprint', 'status', 'sync', 'ticket']);
+  assert.deepEqual(CMDS, ['adopt', 'bug', 'build', 'change', 'close', 'doctor', 'new', 'sprint', 'status', 'sync', 'ticket']);
   const en = fs.readdirSync(path.join(LAYER, 'commands', 'en')).map((f) => f.replace(/\.md$/, '')).sort();
   assert.deepEqual(en, CMDS, 'es y en deben tener exactamente los mismos comandos');
 });

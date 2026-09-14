@@ -21,6 +21,7 @@ El puente entre ambos es deterministico: no lo improvises, ejecutalo.
 | `/sw:build <change-id>` | construir un change |
 | `/sw:sync` | actualizar vendors de forma controlada |
 | `/sw:status` | en que va el proyecto: fases, changes, sprint, requisitos, decisiones |
+| `/sw:close [id]` | cerrar stories terminadas: validar y archivar su spec (la linea base) |
 | `/sw:doctor` | diagnostico del entorno y del flujo |
 
 En OpenCode los mismos comandos son `/sw-new`, `/sw-change`, etc.
@@ -77,6 +78,8 @@ cualquier default que asumirias.
 3. **Un desarrollador, un change a la vez.** Las stories estan dimensionadas para eso.
 4. **Los `#### Scenario:` del spec son los casos de prueba.** No inventes criterios nuevos
    durante la construccion.
+5. **Terminar no es cerrar.** Una story con tareas completas se cierra con `/sw:close` (valida y
+   archiva). Sin cierre no hay linea base y `/sw:change` no puede medir alcance.
 
 ## Las preferencias del proyecto mandan
 

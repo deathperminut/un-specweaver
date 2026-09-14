@@ -91,7 +91,7 @@ const UI = {
   es: {
     title: 'Estado del proyecto', how: '¿Como vamos?', glossary: 'Nomenclatura', glossaryHint: 'que significa cada sigla',
     complete: 'completado', storiesDone: 'stories terminadas', tasks: 'tareas hechas', coverage: 'requisitos con story',
-    archived: 'specs archivadas', wave: 'ola actual', ready: 'listas para empezar', revisions: 'revisiones', decisions: 'decisiones registradas',
+    archived: 'specs archivadas', unclosed: 'terminadas sin cerrar', wave: 'ola actual', ready: 'listas para empezar', revisions: 'revisiones', decisions: 'decisiones registradas',
     days: 'dias de trabajo', unstable: 'requisitos inestables', of: 'de', phases: 'Fases del metodo',
     phase: { understand: 'Entender', decide: 'Decidir', decompose: 'Descomponer', translate: 'Traducir', build: 'Construir', close: 'Cerrar' },
     effort: 'Esfuerzo por etapa', effortHint: 'lo que el metodo deja escrito: decisiones, cambios, supuestos, artefactos. No horas.',
@@ -127,7 +127,7 @@ const UI = {
   en: {
     title: 'Project status', how: 'How are we doing?', glossary: 'Glossary', glossaryHint: 'what each acronym means',
     complete: 'complete', storiesDone: 'stories finished', tasks: 'tasks done', coverage: 'requirements with a story',
-    archived: 'specs archived', wave: 'current wave', ready: 'ready to start', revisions: 'revisions', decisions: 'decisions recorded',
+    archived: 'specs archived', unclosed: 'finished but not closed', wave: 'current wave', ready: 'ready to start', revisions: 'revisions', decisions: 'decisions recorded',
     days: 'working days', unstable: 'unstable requirements', of: 'of', phases: 'Method phases',
     phase: { understand: 'Understand', decide: 'Decide', decompose: 'Decompose', translate: 'Translate', build: 'Build', close: 'Close' },
     effort: 'Effort per stage', effortHint: 'what the method leaves written: decisions, changes, assumptions, artifacts. Not hours.',
@@ -188,7 +188,7 @@ details.gloss summary::before{content:'▸';color:var(--acc)}details.gloss[open]
 .ring svg{width:150px;height:150px}.ring .n{font-size:34px;font-weight:700;letter-spacing:-1px}.ring small{color:var(--muted)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:78px}
 .tile .v{font-size:24px;font-weight:600;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.tile .v small{font-size:13px;color:var(--muted);font-weight:400;margin-left:3px}.tile .l{color:var(--muted);font-size:12px;margin-top:2px}
-.tile .bar{margin-top:8px}.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}.bar i.good{background:var(--good)}
+.tile.warn{border-color:rgba(250,178,25,.5)}.tile .bar{margin-top:8px}.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}.bar i.good{background:var(--good)}
 .stepper{display:flex;align-items:center;gap:0;margin-top:14px;overflow-x:auto;padding:4px 0}.step{display:flex;align-items:center;gap:8px;white-space:nowrap}.step .c{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;font-size:11px;color:var(--muted);flex:none}
 .step.done .c{background:var(--good-soft);border-color:var(--good);color:var(--good)}.step.partial .c{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}.step .t{font-size:12.5px}.step.done .t{color:var(--fg)}.step .t{color:var(--muted)}
 .step .ln{width:46px;height:2px;background:var(--line2);margin:0 8px;flex:none}.step.done .ln{background:var(--good)}
@@ -260,13 +260,13 @@ const glossary = () => \`<details class="gloss" open><summary><b>\${T.glossary}<
 function hero(){
   const p = m.storiesPct ?? 0; const r = 62, C = 2*Math.PI*r;
   const ring = \`<svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--acc)" stroke-width="10" stroke-linecap="round" stroke-dasharray="\${C}" stroke-dashoffset="\${C*(1-p/100)}" transform="rotate(-90 75 75)"/><text x="75" y="70" text-anchor="middle" fill="var(--fg)" font-size="30" font-weight="700">\${p}%</text><text x="75" y="92" text-anchor="middle" fill="var(--muted)" font-size="11">\${esc(T.complete)}</text></svg>\`;
-  const tile = (v, l, bar, sub) => \`<div class="tile"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div>\${bar!=null?\`<div class="bar"><i class="\${bar>=100?'good':''}" style="width:\${Math.min(100,bar)}%"></i></div>\`:''}</div>\`;
+  const tile = (v, l, bar, sub, cls='') => \`<div class="tile \${cls}"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div>\${bar!=null?\`<div class="bar"><i class="\${bar>=100?'good':''}" style="width:\${Math.min(100,bar)}%"></i></div>\`:''}</div>\`;
   const sp = M.sprint;
   return \`<section><h2>\${T.how}</h2><div class="hero"><div class="card ring">\${ring}<small>\${m.storiesDone} \${T.of} \${m.stories} \${T.storiesDone}</small></div>
   <div class="tiles">
     \${tile(m.tasks.done, T.tasks, m.tasksPct, \`/ \${m.tasks.total}\`)}
     \${tile(m.requirements.coveragePct==null?'—':m.requirements.coveragePct+'%', T.coverage, m.requirements.coveragePct, m.requirements.fr?\`\${m.requirements.covered}/\${m.requirements.fr} FR\`:'')}
-    \${tile(m.changes.archived, T.archived, pct(m.changes.archived, m.changes.total), \`/ \${m.changes.total}\`)}
+    \${tile(m.changes.archived, T.archived, pct(m.changes.archived, m.changes.total), \`/ \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`, m.changes.doneUnarchived?'warn':'')}
     \${tile(sp&&sp.current?sp.current:'—', T.wave, null, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
     \${tile(m.decisions.total, T.decisions, null, m.decisions.changes?\`· \${m.decisions.changes} \${T.chg}\`:'')}
     \${tile(m.requirements.unstable, T.unstable, null, '')}

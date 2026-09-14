@@ -21,6 +21,7 @@ The bridge between them is deterministic: do not improvise it, run it.
 | `/sw:build <change-id>` | build a change |
 | `/sw:sync` | update vendors in a controlled way |
 | `/sw:status` | where the project stands: phases, changes, sprint, requirements, decisions |
+| `/sw:close [id]` | close finished stories: validate and archive their spec (the baseline) |
 | `/sw:doctor` | environment and flow diagnostics |
 
 In OpenCode the same commands are `/sw-new`, `/sw-change`, and so on.

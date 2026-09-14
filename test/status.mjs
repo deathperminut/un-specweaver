@@ -144,3 +144,42 @@ test('status desde el CLI: terminal, --html escribe el dashboard, --json el mode
   assert.equal(j.changes.length, 4);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+// --- cerrar: validar y archivar como comando, no como recordatorio ----------------------
+import { closable, closeChanges, unarchivedDone } from '../src/close.mjs';
+
+test('closable lista solo los changes con todas las tareas marcadas y sin archivar', () => {
+  const dir = midProject();
+  assert.deepEqual(closable(dir).map((c) => c.story), [], '1.1 esta a medias; 2.1 ya archivado');
+  const t = path.join(dir, 'openspec', 'changes', 'e1s1-registro-de-proveedor-con-nit', 'tasks.md');
+  fs.writeFileSync(t, fs.readFileSync(t, 'utf8').replace(/- \[ \]/g, '- [x]'));
+  assert.deepEqual(closable(dir).map((c) => c.story), ['1.1']);
+  assert.equal(unarchivedDone(dir), 1);
+  assert.equal(collectStatus(dir).metrics.changes.doneUnarchived, 1);
+  assert.match(renderHtml(collectStatus(dir), 'es'), /terminadas sin cerrar/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('closeChanges valida antes de archivar y no archiva lo que no valida', () => {
+  const calls = [];
+  const run = (args) => { calls.push(args.join(' ')); return args[0] === 'validate' && args[1] === 'malo' ? { status: 1, out: 'Requirement X is missing SHALL' } : { status: 0, out: 'archived' }; };
+  const r = closeChanges('/x', ['bueno', 'malo'], { run });
+  assert.deepEqual(calls, ['validate bueno --strict', 'archive bueno --yes', 'validate malo --strict'], 'malo no llega a archive');
+  assert.deepEqual(r.map((x) => [x.id, x.ok, x.step]), [['bueno', true, 'archive'], ['malo', false, 'validate']]);
+  assert.match(r[1].out, /SHALL/);
+  assert.ok(closeChanges('/x', ['a'], { dryRun: true, run: () => { throw new Error('no debe correr'); } })[0].dryRun);
+});
+
+test('close desde el CLI: sin ids lista; doctor avisa mientras haya terminadas sin cerrar', () => {
+  const dir = midProject();
+  const t = path.join(dir, 'openspec', 'changes', 'e1s1-registro-de-proveedor-con-nit', 'tasks.md');
+  fs.writeFileSync(t, fs.readFileSync(t, 'utf8').replace(/- \[ \]/g, '- [x]'));
+  const out = execFileSync('node', [CLI, 'close'], { cwd: dir, stdio: 'pipe' }).toString();
+  assert.match(out, /1 change\(s\) con todas las tareas completas/);
+  assert.match(out, /e1s1-registro-de-proveedor-con-nit/);
+  const dry = execFileSync('node', [CLI, 'close', '--done', '--dry-run'], { cwd: dir, stdio: 'pipe' }).toString();
+  assert.match(dry, /\[dry\] e1s1-registro-de-proveedor-con-nit/);
+  const doc = execFileSync('node', [CLI, 'doctor'], { cwd: dir, stdio: 'pipe' }).toString();
+  assert.match(doc, /1 story\/ies con todas las tareas completas SIN archivar/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

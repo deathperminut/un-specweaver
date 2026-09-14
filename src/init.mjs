@@ -3,6 +3,7 @@ import path from 'node:path';
 import readline from 'node:readline/promises';
 import { VENDORS, preflight, detectAgents, detectEngram, isGitRepo, writeState, readState, which } from './env.mjs';
 import { buildPlan } from './steps.mjs';
+import { unarchivedDone } from './close.mjs';
 import { runPlan } from './run.mjs';
 import { t, LANGS } from './i18n.mjs';
 import { resolvePrefs, promptPrefs, promptAgents, validateFlag, DEFAULTS } from './prefs.mjs';
@@ -157,6 +158,10 @@ export function doctor(opts) {
   }
 
   reportOptional(root, lang);
+
+  // Terminado no es cerrado. Sin archive no hay linea base y /sw:change no mide alcance.
+  const pending = unarchivedDone(root);
+  if (pending) console.log(t(lang, 'doctor.unarchived', pending));
 
   console.log(
     blockingPlan ? t(lang, 'doctor.pendingPlan', blockingPlan)

@@ -28,7 +28,8 @@ Los comandos, para tenerlos a mano:
   /sw:bug "<defecto>"  defecto (lo acordado esta bien, el codigo no)
   /sw:ticket <n>       issue de GitHub: clasifica y enruta
   /sw:doctor           salud del entorno y del flujo
-  /sw:status           en que va el proyecto (o: npx un-specweaver status --open)`,
+  /sw:status           en que va el proyecto (o: npx un-specweaver status --open)
+  /sw:close            cerrar stories terminadas: validar y archivar su spec`,
     'prefs.header': `\n  Configuracion del proyecto — Enter toma el valor por defecto [1].\n  Queda en .un-specweaver/config.json y no se vuelve a preguntar.\n`,
     'prefs.ask': '  > ',
     'prefs.agentsHeader': '\n  Agentes a configurar (detectados en tu maquina)\n',
@@ -143,6 +144,7 @@ ${cmds}
     'doctor.unknownVersion': 'version desconocida',
     'doctor.pending': (n) => `\n${n} paso(s) pendiente(s). Corre "un-specweaver init" — los ya hechos se omiten solos.`,
     'doctor.allGood': '\nTodo al dia.',
+    'doctor.unarchived': (n) => `\n${n} story/ies con todas las tareas completas SIN archivar: no hay linea base y /sw:change no puede medir alcance. Cierra con "npx un-specweaver close --done".`,
 
     'engram.name': 'engram',
     'engram.present': (b) => `presente (${b})`,
@@ -210,7 +212,8 @@ The commands, for reference:
   /sw:bug "<defect>"   defect (what was agreed is fine, the code is not)
   /sw:ticket <n>       GitHub issue: classify and route
   /sw:doctor           environment and flow health
-  /sw:status           where the project stands (or: npx un-specweaver status --open)`,
+  /sw:status           where the project stands (or: npx un-specweaver status --open)
+  /sw:close            close finished stories: validate and archive their spec`,
     'prefs.header': `\n  Project setup — Enter takes the default [1].\n  Stored in .un-specweaver/config.json and never asked again.\n`,
     'prefs.ask': '  > ',
     'prefs.agentsHeader': '\n  Agents to configure (detected on your machine)\n',
@@ -325,6 +328,7 @@ ${cmds}
     'doctor.unknownVersion': 'unknown version',
     'doctor.pending': (n) => `\n${n} step(s) pending. Run "un-specweaver init" — completed ones are skipped.`,
     'doctor.allGood': '\nAll up to date.',
+    'doctor.unarchived': (n) => `\n${n} story/ies with every task complete but NOT archived: there is no baseline and /sw:change cannot measure scope. Close them with "npx un-specweaver close --done".`,
 
 
     'engram.name': 'engram',
