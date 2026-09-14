@@ -95,8 +95,8 @@ const UI = {
     alertNone: 'ningun requisito inestable', alertWhy: 'Un requisito que cambia varias veces es un requisito que el equipo no entiende igual. Cada cambio arrastra stories, specs y codigo ya hecho. Antes de tocar uno de estos, lee su historial y confirma con quien lo pidio.',
     tabDone: 'Completados', tabPending: 'Pendientes', canvasFR: 'Requisitos funcionales', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tareas', canvasUnstable: 'Requisitos inestables',
     frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
-    work: 'Cuando se trabajo', workHint: 'cada dia con actividad registrada y que paso ese dia. Los dias sin registro no aparecen: no se sabe que paso.',
-    dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', gap: 'dias sin registro', activeDays: 'dias con actividad',
+    work: 'Cuando se trabajo', workHint: 'cada celda es un dia; el color, cuanta actividad quedo registrada: commits, decisiones, cambios, specs cerradas. Pasa el cursor para ver el detalle.',
+    dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', dayCommits: 'commits', gap: 'dias sin registro', activeDays: 'dias con actividad', less: 'menos', more: 'mas', dow: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'], months: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'], noActivity: 'sin actividad registrada', since: 'desde',
     memory: 'Memoria del proyecto', tabHistory: 'Historial paso a paso', tabKey: 'Decisiones clave', tabImpacts: 'Cambios e impacto', tabStats: 'Por etapa',
     stEntries: 'entradas', stKind: 'Etapa', stDec: 'decisiones', stChg: 'cambios', stOvr: 'descartes', stAsm: 'supuestos', stOther: 'otras',
     title: 'Estado del proyecto', how: '¿Como vamos?', glossary: 'Nomenclatura', glossaryHint: 'que significa cada sigla',
@@ -141,8 +141,8 @@ const UI = {
     alertNone: 'no unstable requirements', alertWhy: 'A requirement that changes several times is one the team does not understand the same way. Each change drags stories, specs and code already done. Before touching one of these, read its history and confirm with whoever asked for it.',
     tabDone: 'Completed', tabPending: 'Pending', canvasFR: 'Functional requirements', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tasks', canvasUnstable: 'Unstable requirements',
     frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
-    work: 'When work happened', workHint: 'every day with recorded activity and what happened. Days without records do not appear: nobody knows what happened.',
-    dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', gap: 'days without records', activeDays: 'active days',
+    work: 'When work happened', workHint: 'each cell is a day; the color, how much recorded activity: commits, decisions, changes, specs closed. Hover for the detail.',
+    dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', dayCommits: 'commits', gap: 'days without records', activeDays: 'active days', less: 'less', more: 'more', dow: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], noActivity: 'no recorded activity', since: 'since',
     memory: 'Project memory', tabHistory: 'Step-by-step history', tabKey: 'Key decisions', tabImpacts: 'Changes and impact', tabStats: 'Per stage',
     stEntries: 'entries', stKind: 'Stage', stDec: 'decisions', stChg: 'changes', stOvr: 'discards', stAsm: 'assumptions', stOther: 'other',
     title: 'Project status', how: 'How are we doing?', glossary: 'Glossary', glossaryHint: 'what each acronym means',
@@ -241,7 +241,7 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .drawer .row{display:flex;gap:6px;flex-wrap:wrap}.drawer .link{cursor:pointer}.drawer .link:hover{border-color:var(--acc);color:var(--acc)}
 .chain{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0}.cring{flex:1;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative;transition:border-color .15s}.cring:hover{border-color:var(--acc)}
 .cring+.cring{margin-left:26px}.cring+.cring::before{content:'→';position:absolute;left:-22px;top:46%;color:var(--dim);font-size:18px}.cring svg{width:110px;height:110px}.cring .l{font-size:12.5px;color:var(--fg)}.cring .s{font-size:11.5px;color:var(--muted)}
-.alert{display:flex;align-items:center;gap:12px;background:var(--warn-soft);border:1px solid rgba(250,178,25,.45);border-radius:10px;padding:10px 14px;margin-top:12px;cursor:pointer}.alert.ok{background:var(--good-soft);border-color:rgba(74,222,128,.35);cursor:default}.alert b{font-size:20px;color:var(--warn)}.alert.ok b{color:var(--good)}.alert .t{flex:1}.alert small{color:var(--muted)}
+.hero2 .alert{margin-top:12px}@media(max-width:760px){.hero2{grid-template-columns:1fr!important}}.alert{display:flex;align-items:center;gap:12px;background:var(--warn-soft);border:1px solid rgba(250,178,25,.45);border-radius:10px;padding:10px 14px;margin-top:12px;cursor:pointer}.alert.ok{background:var(--good-soft);border-color:rgba(74,222,128,.35);cursor:default}.alert b{font-size:20px;color:var(--warn)}.alert.ok b{color:var(--good)}.alert .t{flex:1}.alert small{color:var(--muted)}
 .canvas{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}.canvas.open{display:flex}.canvas .ch{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line)}.canvas .ch h3{margin:0;font-size:16px}.canvas .ch .sp{flex:1}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 20px}.tab{padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-size:13px}.tab.on{color:var(--fg);border-color:var(--acc)}.tab b{font-family:var(--mono);font-weight:500;margin-left:6px;color:var(--acc)}
 .canvas .cb{flex:1;overflow-y:auto;padding:16px 20px 40px}.pane{display:none;max-width:1100px;margin:0 auto}.pane.on{display:block}
@@ -250,6 +250,12 @@ details.it{background:var(--card);border:1px solid var(--line);border-radius:8px
 .tk .tkb{width:16px;height:16px;border:1.5px solid var(--line2);border-radius:4px;display:grid;place-items:center;font-size:11px;color:var(--good);margin-top:2px}.tk.done .tkb{border-color:var(--good);background:var(--good-soft)}.tk .n{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px}.tk .tx{line-height:1.5}.tk .tx code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}
 details.it .body code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}.dc p code,.tl p code{background:var(--card2);border:1px solid var(--line);padding:0 4px;border-radius:4px;color:var(--acc)}
 .expl{background:var(--card2);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--fg)}
+.hm{display:flex;gap:10px;align-items:flex-start;overflow-x:auto;padding:4px 0 8px}.hm .dows{display:grid;grid-template-rows:repeat(7,13px);gap:3px;margin-top:20px;font-size:10px;color:var(--muted);font-family:var(--mono)}.hm .dows span{height:13px;line-height:13px}
+.hm .weeks{display:flex;flex-direction:column;gap:4px}.hm .months{display:flex;gap:3px;height:14px;font-size:10px;color:var(--muted);font-family:var(--mono)}.hm .months span{width:13px;flex:none;white-space:nowrap}.hm .grid{display:flex;gap:3px}.hm .wk{display:grid;grid-template-rows:repeat(7,13px);gap:3px}
+.hm i{width:13px;height:13px;border-radius:3px;background:var(--card2);border:1px solid rgba(255,255,255,.04);display:block;position:relative}.hm i.l1{background:#134e2c}.hm i.l2{background:#1e7a3f}.hm i.l3{background:#2ea653}.hm i.l4{background:#4ade80}.hm i.today{outline:1px solid var(--acc)}.hm i.off{background:transparent;border-color:transparent}
+.hm i:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:18px;transform:translateX(-50%);white-space:pre;background:#0b1020;border:1px solid var(--line2);color:var(--fg);font:11px/1.5 var(--sans);padding:6px 9px;border-radius:6px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left}
+.hmleg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);justify-content:flex-end;margin-top:4px}.hmleg i{width:11px;height:11px;border-radius:2px;display:inline-block;background:var(--card2)}.hmleg i.l1{background:#134e2c}.hmleg i.l2{background:#1e7a3f}.hmleg i.l3{background:#2ea653}.hmleg i.l4{background:#4ade80}
+.hmsum{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:10px}.hmsum b{color:var(--fg);font-weight:600;font-family:var(--mono)}
 .work{display:flex;align-items:flex-start;overflow-x:auto;padding:14px 4px 4px}.wd{min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;position:relative}.wd time{font-family:var(--mono);color:var(--acc);font-size:12px}.wd .k{margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}.wd .k b{color:var(--fg);font-weight:500;font-family:var(--mono);margin-right:4px}
 .wgap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px;color:var(--dim);font-size:11px;font-family:var(--mono);position:relative}.wgap::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--line2)}.wgap span{background:var(--bg);padding:0 6px;position:relative}
 .stt{width:100%;border-collapse:collapse}.stt th,.stt td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.stt th:first-child,.stt td:first-child{text-align:left}.stt th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
@@ -305,12 +311,8 @@ function hero(){
     \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
   </div>\`;
   const alert = rq.unstable ? \`<div class="alert" data-canvas="unstable"><b>\${rq.unstable}</b><div class="t">\${T.alertUnstable}<br><small>\${T.alertHint}</small></div><span class="tag warn">→</span></div>\` : \`<div class="alert ok"><b>✓</b><div class="t">\${T.alertNone}</div></div>\`;
-  const tile = (v, l, sub) => \`<div class="tile"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div></div>\`;
-  const tiles = \`<div class="tiles" style="margin-top:12px">
-    \${tile(sp&&sp.current?sp.current:'—', T.wave, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
-    \${tile(m.dates.activeDays||0, T.activeDays, m.dates.days!=null?\`· \${m.dates.days} \${T.days}\`:'')}
-  </div>\`;
-  return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}\${alert}\${tiles}
+  const wave = \`<div class="alert ok" style="cursor:default;background:var(--acc-soft);border-color:rgba(56,189,248,.35)"><b style="color:var(--acc)">\${sp&&sp.current?sp.current:'—'}<small style="font-size:12px;color:var(--muted)">\${sp?\` / \${sp.waves.length}\`:''}</small></b><div class="t">\${T.wave}<br><small>\${sp?\`\${sp.totals.ready} \${T.ready} · \${sp.totals.archived} \${T.of} \${sp.totals.stories} \${T.stories} \${T.state.archived}\`:T.noSprint}</small></div></div>\`;
+  return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="hero2">\${wave}\${alert}</div>
   <div class="stepper">\${M.phases.map((p,i) => \`<div class="step \${p.done?'done':p.partial?'partial':''}"><span class="c">\${p.done?'✓':p.n}</span><span class="t">\${esc(T.phase[p.key])}</span>\${i<M.phases.length-1?'<span class="ln"></span>':''}</div>\`).join('')}</div></section>\`;
 }
 
@@ -361,20 +363,34 @@ function openCanvas(k){
 }
 function closeCanvas(){ $('#canvas').classList.remove('open'); document.body.style.overflow = ''; }
 
-// ---- cuando se trabajo ----------------------------------------------------------
+// ---- cuando se trabajo: grilla de calor por dia (semanas en columnas) ------------------
 function workSec(){
   const days = m.activity || [];
   if (!days.length) return \`<section><h2>\${T.work}</h2><div class="empty">\${T.noHistory}</div></section>\`;
-  const parts = [];
-  days.forEach((d, i) => {
-    if (i) { const gap = Math.round((new Date(d.date) - new Date(days[i-1].date))/86400000) - 1; parts.push(\`<div class="wgap"><span>\${gap>0?\`+\${gap} \${T.gap}\`:'→'}</span></div>\`); }
-    const k = [];
-    if (d.artifacts.length) k.push(\`<span><b>\${d.artifacts.length}</b>\${T.dayArt}: \${d.artifacts.map(a => T.kind[a]||a).join(', ')}</span>\`);
-    if (d.decisions) k.push(\`<span><b>\${d.decisions}</b>\${T.dayDec}</span>\`); if (d.changes) k.push(\`<span><b>\${d.changes}</b>\${T.dayChg}</span>\`);
-    if (d.bridge) k.push(\`<span><b>\${d.bridge}</b>\${T.dayBridge}</span>\`); if (d.archived) k.push(\`<span><b>\${d.archived}</b>\${T.dayArch}</span>\`);
-    parts.push(\`<div class="wd"><time>\${esc(d.date)}</time><div class="k">\${k.join('')}</div></div>\`);
-  });
-  return \`<section><h2>\${T.work}</h2><p class="hint">\${T.workHint} \${m.dates.first?\`\${m.dates.first} → \${m.dates.last} · \${days.length} \${T.activeDays}\`:''}</p><div class="work">\${parts.join('')}</div></section>\`;
+  const by = new Map(days.map(d => [d.date, d]));
+  const total = (d) => d.commits + d.decisions + d.changes + d.bridge + d.archived + d.artifacts.length;
+  const max = Math.max(1, ...days.map(total));
+  const lvl = (n) => n <= 0 ? 0 : n >= max*0.75 ? 4 : n >= max*0.5 ? 3 : n >= max*0.25 ? 2 : 1;
+  const iso = (dt) => dt.toISOString().slice(0,10);
+  const today = new Date(); today.setUTCHours(0,0,0,0);
+  const first = new Date(days[0].date + 'T00:00:00Z'); const last = new Date(Math.max(new Date(days[days.length-1].date + 'T00:00:00Z'), today));
+  // Empezar en el lunes de la semana del primer dia y cubrir al menos 20 semanas para que la grilla tenga cuerpo.
+  const start = new Date(first); start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
+  const minEnd = new Date(start); minEnd.setUTCDate(minEnd.getUTCDate() + 20*7 - 1);
+  const end = new Date(Math.max(last, minEnd));
+  const weeks = []; let cur = new Date(start);
+  while (cur <= end) { const wk = []; for (let i = 0; i < 7; i++) { wk.push(new Date(cur)); cur.setUTCDate(cur.getUTCDate() + 1); } weeks.push(wk); }
+  const tip = (d) => { const a = by.get(d); if (!a) return \`\${d}\\n\${T.noActivity}\`; const parts = [];
+    if (a.commits) parts.push(\`\${a.commits} \${T.dayCommits}\`); if (a.artifacts.length) parts.push(\`\${T.dayArt}: \${a.artifacts.map(k => T.kind[k]||k).join(', ')}\`);
+    if (a.decisions) parts.push(\`\${a.decisions} \${T.dayDec}\`); if (a.changes) parts.push(\`\${a.changes} \${T.dayChg}\`); if (a.bridge) parts.push(\`\${a.bridge} \${T.dayBridge}\`); if (a.archived) parts.push(\`\${a.archived} \${T.dayArch}\`);
+    return \`\${d}\\n\${parts.join('\\n')}\`; };
+  const months = weeks.map((wk, i) => { const d = wk[0]; const prev = i ? weeks[i-1][0] : null; return (!prev || d.getUTCMonth() !== prev.getUTCMonth()) ? \`<span>\${T.months[d.getUTCMonth()]}</span>\` : '<span></span>'; }).join('');
+  const grid = weeks.map(wk => \`<div class="wk">\${wk.map(dt => { const d = iso(dt); const a = by.get(d); const future = dt > today; return \`<i class="l\${a?lvl(total(a)):0} \${d===iso(today)?'today':''} \${future?'off':''}" data-tip="\${esc(tip(d))}"></i>\`; }).join('')}</div>\`).join('');
+  const sum = { commits: 0, decisions: 0, changes: 0, archived: 0 }; for (const d of days) { sum.commits += d.commits; sum.decisions += d.decisions; sum.changes += d.changes; sum.archived += d.archived; }
+  return \`<section><h2>\${T.work}</h2><p class="hint">\${T.workHint}</p><div class="card">
+    <div class="hmsum"><span><b>\${days.length}</b> \${T.activeDays}</span><span>\${T.since} <b>\${esc(m.dates.first)}</b></span>\${sum.commits?\`<span><b>\${sum.commits}</b> \${T.dayCommits}</span>\`:''}<span><b>\${sum.decisions}</b> \${T.dayDec}</span><span><b>\${sum.changes}</b> \${T.dayChg}</span><span><b>\${sum.archived}</b> \${T.dayArch}</span></div>
+    <div class="hm"><div class="dows">\${T.dow.map((d,i) => \`<span>\${i%2===0?d:''}</span>\`).join('')}</div><div class="weeks"><div class="months">\${months}</div><div class="grid">\${grid}</div></div></div>
+    <div class="hmleg">\${T.less} <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> \${T.more}</div></div></section>\`;
 }
 
 // ---- esfuerzo ----------------------------------------------------------------

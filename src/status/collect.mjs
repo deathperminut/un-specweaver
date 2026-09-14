@@ -3,6 +3,7 @@
 // fuente (PRD, specs, memlogs, ledger) — que es exactamente lo que la tercera regla prohibe.
 import fs from 'node:fs';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { parseEpics } from '../../bridge/parse-epics.mjs';
 import { planSprint } from '../../bridge/plan-sprint.mjs';
 import { findEpics, planningRoot, findPlanningArtifacts } from '../../bridge/cli.mjs';
@@ -202,12 +203,23 @@ export function epicsTree(root, doc = readPlanning(root)) {
   }));
 }
 
+// Los commits son el registro mas honesto de cuando se trabajo: memlogs y archives marcan
+// hitos, git marca cada dia con manos en el codigo. Sin repo, no hay commits y no pasa nada.
+export function commitsByDay(root) {
+  const out = new Map();
+  try {
+    const log = execFileSync('git', ['-C', root, 'log', '--date=short', '--format=%ad'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    for (const d of log.split('\n')) if (d) out.set(d, (out.get(d) || 0) + 1);
+  } catch { /* sin git */ }
+  return out;
+}
+
 const daysBetween = (a, b) => (a && b ? Math.round((new Date(b) - new Date(a)) / 86400000) : null);
 
 // Lo que gerencia pregunta: cuanto se ha hecho, cuanto falta, cuanto costo llegar aqui.
 // "Esfuerzo" se mide con lo que el metodo deja escrito: artefactos, decisiones registradas,
 // requisitos, stories, criterios, tareas. No con horas, que nadie registra.
-export function metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline, sprint }) {
+export function metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline, sprint, commits = new Map() }) {
   const stories = epics.flatMap((e) => e.stories);
   const scenarios = stories.reduce((n, st) => n + st.criteria.length, 0);
   const tasks = changes.reduce((a, c) => ({ done: a.done + c.progress.done, total: a.total + c.progress.total }), { done: 0, total: 0 });
@@ -217,7 +229,7 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
   // Los eliminados por decision no cuentan como vivos: ni en el total, ni como 'sin story'.
   const fr = requirements.rows.filter((r) => r.group === 'FR' && !r.removed);
   const removed = requirements.rows.filter((r) => r.removed).length;
-  const dates = [...artifacts.map((a) => dateIn(a.file)), ...timeline.map((e) => e.when)].filter(Boolean).sort();
+  const dates = [...artifacts.map((a) => dateIn(a.file)), ...timeline.map((e) => e.when), ...commits.keys()].filter(Boolean).sort();
   const byKind = {};
   for (const e of decisions.entries) {
     const k = e.kind;
@@ -233,12 +245,13 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
   // Cuando se trabajo: cada dia con actividad registrada y que paso ese dia. Es lo que la
   // linea de tiempo de trabajo dibuja; los dias sin registro no aparecen porque no se sabe.
   const activity = new Map();
-  const day = (d) => { if (!activity.has(d)) activity.set(d, { date: d, decisions: 0, changes: 0, bridge: 0, archived: 0, artifacts: [] }); return activity.get(d); };
+  const day = (d) => { if (!activity.has(d)) activity.set(d, { date: d, commits: 0, decisions: 0, changes: 0, bridge: 0, archived: 0, artifacts: [] }); return activity.get(d); };
   const bump = (d, k) => { if (d) day(d)[k]++; };
   for (const a of artifacts) { const d = dateIn(a.file); if (d && a.kind !== 'decisions' && !day(d).artifacts.includes(a.kind)) day(d).artifacts.push(a.kind); }
   for (const e of decisions.entries) bump(e.date, e.type === 'change' || e.type === 'override' || e.kind === 'change-proposal' ? 'changes' : 'decisions');
   for (const run of ledger) bump(run.at.slice(0, 10), 'bridge');
   for (const c of changes) if (c.archivedAt) bump(c.archivedAt, 'archived');
+  for (const [d, n] of commits) day(d).commits += n;
   return {
     requirements: { fr: fr.length, nfr: requirements.rows.filter((r) => r.group === 'NFR').length, ux: requirements.rows.filter((r) => r.group === 'UX-DR').length, total: requirements.rows.length,
       covered: fr.filter((r) => r.stories.length).length, coveragePct: fr.length ? Math.round((fr.filter((r) => r.stories.length).length / fr.length) * 100) : null,
@@ -322,7 +335,7 @@ export function collectStatus(root) {
     generatedAt: new Date().toISOString(),
     project: { name: doc?.projectName || trace?.project || path.basename(root), root, lang: state?.preferences?.lang || state?.lang || 'es', agents: state?.agents || [], installedAt: state?.installedAt || null, vendors: state?.vendors || null },
     phases: phases(root, artifacts, trace, changes),
-    metrics: metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline: tl, sprint }),
+    metrics: metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline: tl, sprint, commits: commitsByDay(root) }),
     epics,
     requirements,
     history,

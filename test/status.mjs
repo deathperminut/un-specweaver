@@ -87,6 +87,7 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.ok(s.changes[0].tasks.length > 0 && 'done' in s.changes[0].tasks[0], 'las tareas llevan texto y estado');
   assert.equal(s.changes[0].tasks[0].n, '1.1'); assert.match(s.changes[0].tasks[0].section, /Implementacion/);
   assert.ok(s.metrics.activity.some((d) => d.date === '2026-09-10' && d.archived === 1), 'la actividad por dia registra el archive');
+  assert.ok(s.metrics.activity.every((d) => 'commits' in d), 'los commits de git entran en la actividad (0 si no hay repo)');
   assert.equal(s.decisions.total, 12);
   assert.equal(s.decisions.ranking[0].id, 'FR001');
 
@@ -142,6 +143,8 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
     assert.match(html, /data-k="story"|\.blk\[data-k/, 'el flujo se dibuja en cliente');
     assert.match(html, /cr\('fr'/, 'cadena de anillos clicable');
     assert.match(html, lang === 'es' ? /Cuando se trabajo/ : /When work happened/);
+    assert.match(html, /\$\{d\}\\n\$\{parts\.join\('\\n'\)\}/, 'los saltos de linea del tooltip llegan escapados al cliente (un \\n crudo rompia el script)');
+    assert.match(html, /class="hm"/, 'grilla de actividad');
     assert.match(html, /\\u003c/, 'el JSON embebido escapa < para no cerrar el script');
   }
   fs.rmSync(dir, { recursive: true, force: true });
