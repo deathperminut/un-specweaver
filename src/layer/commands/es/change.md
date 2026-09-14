@@ -48,6 +48,19 @@ npx un-specweaver bridge --only <N.M> --force
 Un `--only` por cada story tocada. **No regeneres todo**: sobreescribirias changes en vuelo que
 otros desarrolladores ya estan trabajando.
 
+El puente sabe que esta regenerando, no creando:
+
+- si el change existe y esta en curso, **conserva las casillas marcadas** de `tasks.md` y te dice
+  cuales se perdieron porque la tarea cambio de texto
+- si el requisito **ya esta archivado** (vive en `openspec/specs/`), emite `## MODIFIED Requirements`
+  en un change nuevo `<id>-r2`, `-r3`… — el anterior sigue en `archive/`. Reutiliza los nombres de
+  escenario archivados porque OpenSpec los exige; el contenido si se actualiza
+- si la story **perdio** un escenario ya archivado, el puente **falla y no escribe**: OpenSpec no
+  permite quitarlo en un `MODIFIED`. Sigue la instruccion que imprime (conservar el criterio, o
+  un change manual `## REMOVED Requirements` archivado antes de regenerar). No lo parches a mano
+- `trace.json` se fusiona: las stories que no tocaste conservan su entrada
+- cada corrida queda en `.un-specweaver/changelog.jsonl`: es el historial de que se regenero cuando
+
 Antes de correrlo, revisa `.un-specweaver/sprint-plan.md`: si la story afectada tiene dependientes en
 olas posteriores, avisa cuales se ven impactados.
 

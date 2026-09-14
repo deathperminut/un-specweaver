@@ -447,6 +447,29 @@ npx @fission-ai/openspec validate --all --strict
 
 Opciones: `--only 1.2` · `--epic 1` · `--dry-run` · `--force` · `--strict` · `--lang es|en` · `--normative shall|debe`
 
+### Lo que el puente no destruye
+
+Cuatro perdidas reproducidas y cerradas, todas verificadas contra OpenSpec 1.10:
+
+| Situacion | Antes | Ahora |
+|---|---|---|
+| `bridge --only 1.2` | `trace.json` quedaba con **una** story | se fusiona por story: las demas conservan su entrada |
+| `--force` sobre un change en curso | `tasks.md` volvia a `[ ]` | las casillas marcadas se conservan **por texto de tarea**; las que ya no existen se reportan |
+| story ya **archivada** que cambia | salia como `ADDED` y OpenSpec rechazaba el archive (`already exists`) | sale como `MODIFIED`, con id `-r2`, `-r3`… y `revision` en `trace.json` |
+| ¿que corrida regenero que? | nadie lo sabia | `changelog.jsonl`: fecha, opciones, hash del `epics.md`, changes escritos u omitidos, tareas conservadas y perdidas |
+
+Sobre `MODIFIED` hay una regla de OpenSpec que conviene conocer: el bloque tiene que traer **todos
+los escenarios actuales por nombre exacto**, y no permite quitar ninguno (protege contra perdida
+silenciosa). Como el puente nombra los escenarios con el texto del `WHEN`, una story reescrita
+cambiaria los nombres y el archive fallaria. Por eso, para un requisito ya archivado, **los nombres
+archivados mandan**: coincidencia exacta primero, posicion despues; el contenido si se actualiza.
+Si la story **perdio** un escenario, el puente falla antes de escribir y dice como salir (un change
+manual `## REMOVED Requirements`, archivarlo, y volver a correr). Emitir un change que no se puede
+archivar seria peor que no emitirlo.
+
+`changelog.jsonl` es el unico archivo del puente con fecha, a proposito: `trace.json` y los changes
+siguen siendo deterministas byte a byte.
+
 ### Mapeo
 
 | BMAD | OpenSpec |
@@ -457,6 +480,8 @@ Opciones: `--only 1.2` · `--epic 1` · `--dry-run` · `--force` · `--strict` �
 | `I want {want}` | `proposal.md` → `## What Changes` + `### Requirement:` |
 | bloque `Given/When/Then/And` | `#### Scenario:` + `- **GIVEN/WHEN/THEN/AND**` |
 | FR Coverage Map | `.un-specweaver/trace.json` |
+| story ya archivada, cambiada | `## MODIFIED Requirements`, change `<id>-r<N>` |
+| cada corrida | una linea en `.un-specweaver/changelog.jsonl` |
 
 Funciona en **espanol e ingles**, autodetectado por puntaje de tokens (una palabra suelta que
 "parezca" espanola no voltea un documento ingles). `--lang` fuerza el idioma.
@@ -523,7 +548,7 @@ Una sola duena por dato:
 ## Desarrollo
 
 ```bash
-npm test                    # 123 tests
+npm test                    # 130 tests
 npm pack                    # ~23 kB
 node bin/un-specweaver.mjs init --dry-run
 ```
@@ -535,7 +560,7 @@ implementando `status()` y `plan()`; `--dry-run`, la idempotencia y `doctor` sal
 
 | Pieza | Estado |
 |---|---|
-| `bridge/` — story → change | **funciona**, es/en, validado contra `openspec validate --all --strict` |
+| `bridge/` — story → change | **funciona**, es/en, validado contra `openspec validate --all --strict`; `MODIFIED` + revisiones + ledger verificados contra `openspec archive` |
 | `init` / `doctor` — instalador multi-agente | **funciona**, probado end-to-end desde el tarball |
 | 9 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
 | Skill `un-specweaver` | **funciona**, es/en, todos los agentes |
