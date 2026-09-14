@@ -89,6 +89,16 @@ const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 // Textos de la app (cliente). Se embeben junto con el modelo; el HTML no depende de nada externo.
 const UI = {
   es: {
+    chain: 'Del requisito a la tarea', chainHint: 'click en un anillo para ver que esta completo y que no',
+    frDone: 'FR completados', frDoneHint: 'todas sus stories terminadas', specsDone: 'specs cerradas', tasksDone: 'tareas hechas', storiesDoneShort: 'stories terminadas',
+    alertUnstable: 'requisitos inestables', alertHint: 'han cambiado 2 o mas veces despues de nacer — click para ver cuales y por que',
+    alertNone: 'ningun requisito inestable', alertWhy: 'Un requisito que cambia varias veces es un requisito que el equipo no entiende igual. Cada cambio arrastra stories, specs y codigo ya hecho. Antes de tocar uno de estos, lee su historial y confirma con quien lo pidio.',
+    tabDone: 'Completados', tabPending: 'Pendientes', canvasFR: 'Requisitos funcionales', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tareas', canvasUnstable: 'Requisitos inestables',
+    frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminado por decision',
+    work: 'Cuando se trabajo', workHint: 'cada dia con actividad registrada y que paso ese dia. Los dias sin registro no aparecen: no se sabe que paso.',
+    dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', gap: 'dias sin registro', activeDays: 'dias con actividad',
+    memory: 'Memoria del proyecto', tabHistory: 'Historial paso a paso', tabKey: 'Decisiones clave', tabImpacts: 'Cambios e impacto', tabStats: 'Por etapa',
+    stEntries: 'entradas', stKind: 'Etapa', stDec: 'decisiones', stChg: 'cambios', stOvr: 'descartes', stAsm: 'supuestos', stOther: 'otras',
     title: 'Estado del proyecto', how: '¿Como vamos?', glossary: 'Nomenclatura', glossaryHint: 'que significa cada sigla',
     complete: 'completado', storiesDone: 'stories terminadas', tasks: 'tareas hechas', coverage: 'requisitos con story',
     archived: 'specs archivadas', unclosed: 'terminadas sin cerrar', wave: 'ola actual', ready: 'listas para empezar', revisions: 'revisiones', decisions: 'decisiones registradas',
@@ -125,6 +135,16 @@ const UI = {
     ],
   },
   en: {
+    chain: 'From requirement to task', chainHint: 'click a ring to see what is complete and what is not',
+    frDone: 'FR completed', frDoneHint: 'all their stories finished', specsDone: 'specs closed', tasksDone: 'tasks done', storiesDoneShort: 'stories finished',
+    alertUnstable: 'unstable requirements', alertHint: 'changed 2 or more times after birth — click to see which and why',
+    alertNone: 'no unstable requirements', alertWhy: 'A requirement that changes several times is one the team does not understand the same way. Each change drags stories, specs and code already done. Before touching one of these, read its history and confirm with whoever asked for it.',
+    tabDone: 'Completed', tabPending: 'Pending', canvasFR: 'Functional requirements', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tasks', canvasUnstable: 'Unstable requirements',
+    frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision',
+    work: 'When work happened', workHint: 'every day with recorded activity and what happened. Days without records do not appear: nobody knows what happened.',
+    dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', gap: 'days without records', activeDays: 'active days',
+    memory: 'Project memory', tabHistory: 'Step-by-step history', tabKey: 'Key decisions', tabImpacts: 'Changes and impact', tabStats: 'Per stage',
+    stEntries: 'entries', stKind: 'Stage', stDec: 'decisions', stChg: 'changes', stOvr: 'discards', stAsm: 'assumptions', stOther: 'other',
     title: 'Project status', how: 'How are we doing?', glossary: 'Glossary', glossaryHint: 'what each acronym means',
     complete: 'complete', storiesDone: 'stories finished', tasks: 'tasks done', coverage: 'requirements with a story',
     archived: 'specs archived', unclosed: 'finished but not closed', wave: 'current wave', ready: 'ready to start', revisions: 'revisions', decisions: 'decisions recorded',
@@ -219,10 +239,22 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .drawer .dh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.drawer .dh .id{font-family:var(--mono);color:var(--acc)}.drawer .x{background:none;border:1px solid var(--line2);color:var(--muted);border-radius:6px;padding:3px 9px;cursor:pointer}.drawer .x:hover{color:var(--fg);border-color:var(--acc)}
 .drawer h3{font-size:16px;margin:0 0 12px;line-height:1.35}.drawer h5{margin:16px 0 6px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}.drawer .ac{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px}.drawer .ac b{color:var(--acc);font-weight:500;margin-right:4px}
 .drawer .row{display:flex;gap:6px;flex-wrap:wrap}.drawer .link{cursor:pointer}.drawer .link:hover{border-color:var(--acc);color:var(--acc)}
+.chain{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0}.cring{flex:1;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative;transition:border-color .15s}.cring:hover{border-color:var(--acc)}
+.cring+.cring{margin-left:26px}.cring+.cring::before{content:'→';position:absolute;left:-22px;top:46%;color:var(--dim);font-size:18px}.cring svg{width:110px;height:110px}.cring .l{font-size:12.5px;color:var(--fg)}.cring .s{font-size:11.5px;color:var(--muted)}
+.alert{display:flex;align-items:center;gap:12px;background:var(--warn-soft);border:1px solid rgba(250,178,25,.45);border-radius:10px;padding:10px 14px;margin-top:12px;cursor:pointer}.alert.ok{background:var(--good-soft);border-color:rgba(74,222,128,.35);cursor:default}.alert b{font-size:20px;color:var(--warn)}.alert.ok b{color:var(--good)}.alert .t{flex:1}.alert small{color:var(--muted)}
+.canvas{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}.canvas.open{display:flex}.canvas .ch{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line)}.canvas .ch h3{margin:0;font-size:16px}.canvas .ch .sp{flex:1}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 20px}.tab{padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-size:13px}.tab.on{color:var(--fg);border-color:var(--acc)}.tab b{font-family:var(--mono);font-weight:500;margin-left:6px;color:var(--acc)}
+.canvas .cb{flex:1;overflow-y:auto;padding:16px 20px 40px}.pane{display:none;max-width:1100px;margin:0 auto}.pane.on{display:block}
+details.it{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}details.it summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}details.it summary::before{content:'▸';color:var(--acc);font-size:12px}details.it[open] summary::before{content:'▾'}details.it .body{padding:0 14px 12px 32px;color:var(--muted);font-size:13px}details.it .body p{margin:6px 0;color:var(--fg)}
+.expl{background:var(--card2);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--fg)}
+.work{display:flex;align-items:flex-start;overflow-x:auto;padding:14px 4px 4px}.wd{min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;position:relative}.wd time{font-family:var(--mono);color:var(--acc);font-size:12px}.wd .k{margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}.wd .k b{color:var(--fg);font-weight:500;font-family:var(--mono);margin-right:4px}
+.wgap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px;color:var(--dim);font-size:11px;font-family:var(--mono);position:relative}.wgap::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--line2)}.wgap span{background:var(--bg);padding:0 6px;position:relative}
+.stt{width:100%;border-collapse:collapse}.stt th,.stt td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.stt th:first-child,.stt td:first-child{text-align:left}.stt th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line2);border-radius:10px}footer{margin-top:40px;color:var(--dim);font-size:12px;font-family:var(--mono)}
 </style></head><body>
 <div id="app"></div>
 <aside id="drawer" class="drawer"></aside>
+<div id="canvas" class="canvas"></div>
 <script id="data" type="application/json">${json}</script>
 <script>
 (function(){
@@ -257,23 +289,86 @@ function header(){
 const glossary = () => \`<details class="gloss" open><summary><b>\${T.glossary}</b> — \${T.glossaryHint}</summary><div class="gloss-grid">\${T.gloss.map(([k,v]) => \`<div><b>\${esc(k)}</b>\${esc(v)}</div>\`).join('')}</div></details>\`;
 
 // ---- hero ------------------------------------------------------------------
+function ring(p, size=110, color='var(--acc)'){ const r = size*0.4, C = 2*Math.PI*r, c = size/2; return \`<svg viewBox="0 0 \${size} \${size}"><circle cx="\${c}" cy="\${c}" r="\${r}" fill="none" stroke="var(--line)" stroke-width="9"/><circle cx="\${c}" cy="\${c}" r="\${r}" fill="none" stroke="\${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="\${C}" stroke-dashoffset="\${C*(1-(p||0)/100)}" transform="rotate(-90 \${c} \${c})"/><text x="\${c}" y="\${c+8}" text-anchor="middle" fill="var(--fg)" font-size="\${size*0.22}" font-weight="700">\${p==null?'—':p+'%'}</text></svg>\`; }
 function hero(){
-  const p = m.storiesPct ?? 0; const r = 62, C = 2*Math.PI*r;
-  const ring = \`<svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--acc)" stroke-width="10" stroke-linecap="round" stroke-dasharray="\${C}" stroke-dashoffset="\${C*(1-p/100)}" transform="rotate(-90 75 75)"/><text x="75" y="70" text-anchor="middle" fill="var(--fg)" font-size="30" font-weight="700">\${p}%</text><text x="75" y="92" text-anchor="middle" fill="var(--muted)" font-size="11">\${esc(T.complete)}</text></svg>\`;
-  const tile = (v, l, bar, sub, cls='') => \`<div class="tile \${cls}"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div>\${bar!=null?\`<div class="bar"><i class="\${bar>=100?'good':''}" style="width:\${Math.min(100,bar)}%"></i></div>\`:''}</div>\`;
-  const sp = M.sprint;
-  return \`<section><h2>\${T.how}</h2><div class="hero"><div class="card ring">\${ring}<small>\${m.storiesDone} \${T.of} \${m.stories} \${T.storiesDone}</small></div>
-  <div class="tiles">
-    \${tile(m.tasks.done, T.tasks, m.tasksPct, \`/ \${m.tasks.total}\`)}
-    \${tile(m.requirements.coveragePct==null?'—':m.requirements.coveragePct+'%', T.coverage, m.requirements.coveragePct, m.requirements.fr?\`\${m.requirements.covered}/\${m.requirements.fr} FR\`:'')}
-    \${tile(m.changes.archived, T.archived, pct(m.changes.archived, m.changes.total), \`/ \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`, m.changes.doneUnarchived?'warn':'')}
-    \${tile(sp&&sp.current?sp.current:'—', T.wave, null, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
-    \${tile(m.decisions.total, T.decisions, null, m.decisions.changes?\`· \${m.decisions.changes} \${T.chg}\`:'')}
-    \${tile(m.requirements.unstable, T.unstable, null, '')}
-    \${tile(m.changes.revisions, T.revisions, null, '')}
-    \${tile(m.dates.days==null?'—':m.dates.days, T.days, null, m.dates.first?\`\${m.dates.first} → \${m.dates.last}\`:'')}
-  </div></div>
+  const rq = m.requirements; const sp = M.sprint;
+  const cr = (k, p, l, sub) => \`<div class="cring" data-canvas="\${k}">\${ring(p)}<div class="l">\${l}</div><div class="s">\${sub}</div></div>\`;
+  const chain = \`<div class="chain">
+    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\`)}
+    \${cr('stories', m.storiesPct, T.storiesDoneShort, \`\${m.storiesDone} \${T.of} \${m.stories}\`)}
+    \${cr('specs', pct(m.changes.archived, m.changes.total), T.specsDone, \`\${m.changes.archived} \${T.of} \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`)}
+    \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
+  </div>\`;
+  const alert = rq.unstable ? \`<div class="alert" data-canvas="unstable"><b>\${rq.unstable}</b><div class="t">\${T.alertUnstable}<br><small>\${T.alertHint}</small></div><span class="tag warn">→</span></div>\` : \`<div class="alert ok"><b>✓</b><div class="t">\${T.alertNone}</div></div>\`;
+  const tile = (v, l, sub) => \`<div class="tile"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div></div>\`;
+  const tiles = \`<div class="tiles" style="margin-top:12px">
+    \${tile(sp&&sp.current?sp.current:'—', T.wave, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
+    \${tile(rq.coveragePct==null?'—':rq.coveragePct+'%', T.coverage, rq.fr?\`\${rq.covered}/\${rq.fr} FR\`:'')}
+    \${tile(m.changes.revisions, T.revisions, '')}
+    \${tile(m.dates.activeDays||0, T.activeDays, m.dates.days!=null?\`· \${m.dates.days} \${T.days}\`:'')}
+  </div>\`;
+  return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}\${alert}\${tiles}
   <div class="stepper">\${M.phases.map((p,i) => \`<div class="step \${p.done?'done':p.partial?'partial':''}"><span class="c">\${p.done?'✓':p.n}</span><span class="t">\${esc(T.phase[p.key])}</span>\${i<M.phases.length-1?'<span class="ln"></span>':''}</div>\`).join('')}</div></section>\`;
+}
+
+// ---- canvas a pantalla completa: completados / pendientes, con detalle plegable ---------
+function canvasData(k){
+  const item = (head, tags, body) => ({ head, tags, body });
+  const storyLine = (sid) => { const st = storyById.get(sid); const c = specByStory.get(sid); return \`<span class="tag acc link" data-open="story:\${esc(sid)}">Story \${esc(sid)}</span> \${esc(st?.title||'')} <span class="st \${c?c.state:'missing'}">\${T.state[c?c.state:'missing']}</span>\`; };
+  if (k==='fr') {
+    const rows = reqRows.filter(r => r.group==='FR');
+    const mk = (r) => item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`,
+      \`\${r.changes?\`<span class="tag \${r.changes>=3?'crit':'warn'}">\${r.changes} \${T.changesN}</span>\`:''}\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.frNoStory}</span>\`}\`,
+      \`\${r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.frNoStory}</p>\`}\`);
+    return { title: T.canvasFR, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done).map(mk) };
+  }
+  if (k==='stories') {
+    const mk = (s) => { const c = specByStory.get(s.id); return item(\`<b class="mono" style="color:var(--acc)">Story \${esc(s.id)}</b> <span>\${esc(s.title)}</span>\`,
+      \`<span class="tag dim">Epic \${s.epic}</span><span class="st \${c?c.state:'missing'}">\${T.state[c?c.state:'missing']}</span>\${c&&c.state!=='archived'?\`<span class="tag">\${c.progress.done}/\${c.progress.total} \${T.tasksShort}</span>\`:''}\`,
+      \`<p><b style="color:var(--acc);font-weight:500">\${T.role}</b> \${esc(s.role)}, <b style="color:var(--acc);font-weight:500">\${T.want}</b> \${esc(s.want)}</p><p>\${(s.requirements||[]).map(r => \`<span class="tag fr link" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join(' ')}</p>\${s.criteria.map(ac => \`<div class="ac">\${ac.given?\`<div><b>\${T.given}</b>\${esc(ac.given)}</div>\`:''}\${ac.when?\`<div><b>\${T.when}</b>\${esc(ac.when)}</div>\`:''}\${ac.then?\`<div><b>\${T.then}</b>\${esc(ac.then)}</div>\`:''}</div>\`).join('')}\`); };
+    const isDone = (s) => { const c = specByStory.get(s.id); return c && (c.state==='done'||c.state==='archived'); };
+    return { title: T.canvasStories, done: stories.filter(isDone).map(mk), pending: stories.filter(s => !isDone(s)).map(mk) };
+  }
+  if (k==='specs') {
+    const mk = (c) => item(\`<b class="mono" style="color:var(--acc)">\${esc(c.id)}</b>\`, \`<span class="st \${c.state}">\${T.state[c.state]}\${c.archivedAt?\` · \${c.archivedAt}\`:''}</span>\${c.revision>1?\`<span class="tag crit">\${T.rev} \${c.revision}</span>\`:''}<span class="tag">\${c.progress.done}/\${c.progress.total} \${T.tasksShort}</span>\`,
+      \`<p>\${storyLine(c.story)}</p><p><span class="tag dim">\${esc(c.capability||'')}</span></p>\`);
+    return { title: T.canvasSpecs, done: M.changes.filter(c => c.state==='archived').map(mk), pending: M.changes.filter(c => c.state!=='archived').map(mk) };
+  }
+  if (k==='tasks') {
+    const groups = (pred) => M.changes.map(c => ({ c, t: c.tasks.filter(pred) })).filter(g => g.t.length).map(g => item(\`<b class="mono" style="color:var(--acc)">Story \${esc(g.c.story||'')}</b> <span>\${esc(g.c.title)}</span>\`, \`<span class="tag">\${g.t.length} \${T.tasksShort}</span>\`, g.t.map(t => \`<p>\${t.done?'☑':'☐'} \${esc(t.text)}</p>\`).join('')));
+    return { title: T.canvasTasks, done: groups(t => t.done), pending: groups(t => !t.done) };
+  }
+  if (k==='unstable') {
+    const rows = reqRows.filter(r => r.changes >= 2).sort((a,b) => b.changes-a.changes);
+    const mk = (r) => { const ev = M.history[r.id] || []; return item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`, \`<span class="tag \${r.changes>=3?'crit':'warn'}">\${r.changes} \${T.changesN}</span>\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.frNoStory}</span>\`}\`,
+      \`<ul class="tl">\${ev.map(e => \`<li class="t-\${esc(e.type)}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(e.source)}</span></div><p>\${esc(e.text)}</p></li>\`).join('')}</ul>\${r.stories.length?\`<p>\${T.affects}: \${r.stories.map(storyLine).join('<br>')}</p>\`:''}\`); };
+    return { title: T.canvasUnstable, expl: T.alertWhy, done: [], pending: rows.map(mk), single: true };
+  }
+}
+function openCanvas(k){
+  const d = canvasData(k); if (!d) return; const c = $('#canvas');
+  const list = (arr) => arr.length ? arr.map(i => \`<details class="it"><summary>\${i.head}<span class="sp" style="flex:1"></span>\${i.tags}</summary><div class="body">\${i.body}</div></details>\`).join('') : \`<div class="empty">—</div>\`;
+  c.innerHTML = \`<div class="ch"><h3>\${esc(d.title)}</h3><span class="sp"></span><button class="x" data-close-canvas>\${T.close} (Esc)</button></div>
+    \${d.single ? '' : \`<div class="tabs"><div class="tab on" data-tab="done">\${T.tabDone}<b>\${d.done.length}</b></div><div class="tab" data-tab="pending">\${T.tabPending}<b>\${d.pending.length}</b></div></div>\`}
+    <div class="cb">\${d.expl?\`<div class="expl">\${esc(d.expl)}</div>\`:''}\${d.single ? \`<div class="pane on">\${list(d.pending)}</div>\` : \`<div class="pane on" data-pane="done">\${list(d.done)}</div><div class="pane" data-pane="pending">\${list(d.pending)}</div>\`}</div>\`;
+  c.classList.add('open'); document.body.style.overflow = 'hidden';
+}
+function closeCanvas(){ $('#canvas').classList.remove('open'); document.body.style.overflow = ''; }
+
+// ---- cuando se trabajo ----------------------------------------------------------
+function workSec(){
+  const days = m.activity || [];
+  if (!days.length) return \`<section><h2>\${T.work}</h2><div class="empty">\${T.noHistory}</div></section>\`;
+  const parts = [];
+  days.forEach((d, i) => {
+    if (i) { const gap = Math.round((new Date(d.date) - new Date(days[i-1].date))/86400000) - 1; parts.push(\`<div class="wgap"><span>\${gap>0?\`+\${gap} \${T.gap}\`:'→'}</span></div>\`); }
+    const k = [];
+    if (d.artifacts.length) k.push(\`<span><b>\${d.artifacts.length}</b>\${T.dayArt}: \${d.artifacts.map(a => T.kind[a]||a).join(', ')}</span>\`);
+    if (d.decisions) k.push(\`<span><b>\${d.decisions}</b>\${T.dayDec}</span>\`); if (d.changes) k.push(\`<span><b>\${d.changes}</b>\${T.dayChg}</span>\`);
+    if (d.bridge) k.push(\`<span><b>\${d.bridge}</b>\${T.dayBridge}</span>\`); if (d.archived) k.push(\`<span><b>\${d.archived}</b>\${T.dayArch}</span>\`);
+    parts.push(\`<div class="wd"><time>\${esc(d.date)}</time><div class="k">\${k.join('')}</div></div>\`);
+  });
+  return \`<section><h2>\${T.work}</h2><p class="hint">\${T.workHint} \${m.dates.first?\`\${m.dates.first} → \${m.dates.last} · \${days.length} \${T.activeDays}\`:''}</p><div class="work">\${parts.join('')}</div></section>\`;
 }
 
 // ---- esfuerzo ----------------------------------------------------------------
@@ -323,29 +418,37 @@ function related(k, id){
   return set;
 }
 
-// ---- impactos ----------------------------------------------------------------
-function impactsSec(){
-  if (!M.impacts.length) return \`<section><h2>\${T.impacts}</h2><p class="hint">\${T.impactsHint}</p><div class="empty">\${T.noImpacts}</div></section>\`;
-  return \`<section><h2>\${T.impacts}</h2><p class="hint">\${T.impactsHint}</p><div class="cards">\${M.impacts.map(e => \`<div class="dc \${e.type==='override'?'override':'constraint'}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':'warn'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span></div><p>\${esc(e.text)}</p>
-    <div class="refs">\${e.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}\${e.stories.length?\`<span class="tag dim">→ \${T.affects}</span>\`+e.stories.map(s => \`<span class="tag acc chip" data-open="story:\${esc(s)}">Story \${esc(s)}</span>\`).join(''):''}</div></div>\`).join('')}</div></section>\`;
+// ---- memoria del proyecto: historial, decisiones clave, impactos, por etapa (pestañas) ----
+function impactsBody(){
+  if (!M.impacts.length) return \`<div class="empty">\${T.noImpacts}</div>\`;
+  return \`<p class="hint">\${T.impactsHint}</p><div class="cards">\${M.impacts.map(e => \`<div class="dc \${e.type==='override'?'override':'constraint'}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':'warn'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span></div><p>\${esc(e.text)}</p>
+    <div class="refs">\${e.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}\${e.stories.length?\`<span class="tag dim">→ \${T.affects}</span>\`+e.stories.map(s => \`<span class="tag acc chip" data-open="story:\${esc(s)}">Story \${esc(s)}</span>\`).join(''):''}</div></div>\`).join('')}</div>\`;
 }
-
-// ---- decisiones clave ----------------------------------------------------------
-function keySec(){
+function keyBody(){
   const groups = {}; for (const d of M.decisions.key) (groups[d.kind] = groups[d.kind] || []).push(d);
   const order = ['briefs','prds','architecture','ux-designs'];
   const body = order.filter(k => groups[k]).map(k => \`<div class="grp"><h4>\${esc(T.kind[k]||k)}</h4><div class="cards">\${groups[k].map(d => \`<div class="dc \${d.type}"><div class="h"><span class="tag \${d.type==='override'?'crit':d.type==='constraint'?'warn':d.type==='direction'?'vio':'acc'}">\${esc(T.type[d.type]||d.type)}</span>\${d.date?\`<time>\${esc(d.date)}</time>\`:''}</div><p>\${esc(d.text)}</p>\${d.refs.length?\`<div class="refs">\${d.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('')}</div></div>\`).join('');
-  return \`<section><h2>\${T.key}</h2><p class="hint">\${T.keyHint}</p>\${body || \`<div class="empty">\${T.noHistory}</div>\`}</section>\`;
+  return \`<p class="hint">\${T.keyHint}</p>\${body || \`<div class="empty">\${T.noHistory}</div>\`}\`;
 }
-
-// ---- historial ----------------------------------------------------------------
-function historySec(){
+function historyBody(){
   const ev = [...M.timeline].sort((a,b) => String(a.when||'').localeCompare(String(b.when||'')));
-  if (!ev.length) return \`<section><h2>\${T.history}</h2><div class="empty">\${T.noHistory}</div></section>\`;
+  if (!ev.length) return \`<div class="empty">\${T.noHistory}</div>\`;
   let last = null; const items = [];
   for (const e of ev) { if (e.when !== last) { items.push(\`<li class="day">\${esc(e.when||'—')}</li>\`); last = e.when; }
     items.push(\`<li class="t-\${esc(e.type)}"><div class="h"><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':e.type==='archived'||e.type==='generated'?'fr':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span>\${(e.refs||[]).slice(0,6).map(r => /^Story /.test(r)?\`<span class="tag acc chip" data-open="story:\${esc(r.slice(6))}">\${esc(r)}</span>\`:\`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div><p>\${esc(e.text)}</p><small>\${esc(e.file)}</small></li>\`); }
-  return \`<section><h2>\${T.history}</h2><p class="hint">\${T.historyHint}</p><div class="card"><ul class="tl">\${items.join('')}</ul></div></section>\`;
+  return \`<p class="hint">\${T.historyHint}</p><div class="card"><ul class="tl">\${items.join('')}</ul></div>\`;
+}
+function statsBody(){
+  const kinds = Object.keys(m.decisions.byKind); if (!kinds.length) return \`<div class="empty">\${T.noDecisions}</div>\`;
+  const tot = { entries:0, decisions:0, changes:0, overrides:0, assumptions:0 };
+  const rows = kinds.map(k => { const d = m.decisions.byKind[k]; for (const x in tot) tot[x] += d[x]; const other = d.entries-d.decisions-d.changes-d.overrides-d.assumptions; return \`<tr><td>\${esc(T.kind[k]||k)}\${m.dates.phases[k]?\` <span class="mono" style="color:var(--dim)">\${m.dates.phases[k]}</span>\`:''}</td><td>\${d.entries}</td><td>\${d.decisions}</td><td>\${d.changes}</td><td>\${d.overrides}</td><td>\${d.assumptions}</td><td>\${other}</td></tr>\`; }).join('');
+  const other = tot.entries-tot.decisions-tot.changes-tot.overrides-tot.assumptions;
+  return \`<div class="card"><table class="stt"><thead><tr><th>\${T.stKind}</th><th>\${T.stEntries}</th><th>\${T.stDec}</th><th>\${T.stChg}</th><th>\${T.stOvr}</th><th>\${T.stAsm}</th><th>\${T.stOther}</th></tr></thead><tbody>\${rows}<tr style="font-weight:600"><td>Total</td><td>\${tot.entries}</td><td>\${tot.decisions}</td><td>\${tot.changes}</td><td>\${tot.overrides}</td><td>\${tot.assumptions}</td><td>\${other}</td></tr></tbody></table></div>\`;
+}
+function memorySec(){
+  const tabs = [['history', T.tabHistory, M.timeline.length], ['key', T.tabKey, M.decisions.key.length], ['impacts', T.tabImpacts, M.impacts.length], ['stats', T.tabStats, m.decisions.total]];
+  return \`<section><h2>\${T.memory}</h2><div class="tabs" style="padding:0" data-tabs="mem">\${tabs.map(([k,l,n],i) => \`<div class="tab \${i?'':'on'}" data-tab="\${k}">\${l}<b>\${n}</b></div>\`).join('')}</div>
+    <div class="pane on" data-pane="history" style="margin-top:14px">\${historyBody()}</div><div class="pane" data-pane="key" style="margin-top:14px">\${keyBody()}</div><div class="pane" data-pane="impacts" style="margin-top:14px">\${impactsBody()}</div><div class="pane" data-pane="stats" style="margin-top:14px">\${statsBody()}</div></section>\`;
 }
 
 // ---- drawer ----------------------------------------------------------------
@@ -374,11 +477,15 @@ function isVisible(el){ const r = el.getBoundingClientRect(); return r.top >= 0 
 function closeDrawer(){ $('#drawer').classList.remove('open'); const flow = $('#flow'); if (flow) { flow.classList.remove('focus'); flow.querySelectorAll('.blk').forEach(b => b.classList.remove('lit','sel')); drawWires(null); } }
 
 // ---- render ------------------------------------------------------------------
-$('#app').innerHTML = header() + \`<main>\${glossary()}\${hero()}\${effort()}\${flow()}\${impactsSec()}\${keySec()}\${historySec()}<footer>\${T.regen}</footer></main>\`;
+$('#app').innerHTML = header() + \`<main>\${glossary()}\${hero()}\${workSec()}\${effort()}\${flow()}\${memorySec()}<footer>\${T.regen}</footer></main>\`;
 drawWires(null); addEventListener('resize', () => drawWires(null));
-document.addEventListener('click', (ev) => { const o = ev.target.closest('[data-open]'); if (o) { const [k,...rest] = o.dataset.open.split(':'); open(k, rest.join(':')); return; }
+document.addEventListener('click', (ev) => {
+  const cv = ev.target.closest('[data-canvas]'); if (cv) { openCanvas(cv.dataset.canvas); return; }
+  if (ev.target.closest('[data-close-canvas]')) { closeCanvas(); return; }
+  const tab = ev.target.closest('.tab'); if (tab) { const bar = tab.parentElement; const scope = bar.closest('.canvas, section'); bar.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t===tab)); scope.querySelectorAll(':scope .pane[data-pane]').forEach(p => p.classList.toggle('on', p.dataset.pane===tab.dataset.tab)); return; }
+  const o = ev.target.closest('[data-open]'); if (o) { const [k,...rest] = o.dataset.open.split(':'); open(k, rest.join(':')); return; }
   const b = ev.target.closest('.blk'); if (b) { open(b.dataset.k, b.dataset.id); return; } if (ev.target.closest('[data-close]')) closeDrawer(); });
-document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeDrawer(); });
+document.addEventListener('keydown', (e) => { if (e.key==='Escape') { if ($('#canvas').classList.contains('open')) closeCanvas(); else closeDrawer(); } });
 })();
 </script>
 </body></html>

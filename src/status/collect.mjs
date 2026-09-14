@@ -24,6 +24,12 @@ export function taskProgress(md) {
   return { done, total: lines.length };
 }
 
+// Las tareas con su texto: es lo que el canvas de "tareas" abre al hacer click.
+export function taskList(md) {
+  return String(md || '').split('\n').map((l) => l.match(/^\s*- \[([ xX])\] (.*)$/)).filter(Boolean)
+    .map((m) => ({ done: m[1] !== ' ', text: m[2].trim() }));
+}
+
 // Los changes de OpenSpec, activos y archivados, con su estado derivado.
 export function readChanges(root, trace) {
   const dir = path.join(root, 'openspec', 'changes');
@@ -33,9 +39,10 @@ export function readChanges(root, trace) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (!e.isDirectory() || e.name === 'archive') continue;
     const t = byId.get(e.name);
-    const progress = taskProgress(readText(path.join(dir, e.name, 'tasks.md')));
+    const md = readText(path.join(dir, e.name, 'tasks.md'));
+    const progress = taskProgress(md);
     const state = progress.total && progress.done === progress.total ? 'done' : progress.done > 0 ? 'in-progress' : 'pending';
-    out.push(changeRow(e.name, t, progress, state, null));
+    out.push({ ...changeRow(e.name, t, progress, state, null), tasks: taskList(md) });
   }
   const arch = path.join(dir, 'archive');
   if (exists(arch)) {
@@ -44,8 +51,8 @@ export function readChanges(root, trace) {
       const m = e.name.match(/^(\d{4}-\d{2}-\d{2})-(.+)$/);
       const id = m ? m[2] : e.name;
       const t = byId.get(id) || [...byId.values()].find((c) => id.startsWith(c.changeId.replace(/-r\d+$/, '')));
-      const progress = taskProgress(readText(path.join(arch, e.name, 'tasks.md')));
-      out.push(changeRow(id, t, progress, 'archived', m ? m[1] : null));
+      const md = readText(path.join(arch, e.name, 'tasks.md'));
+      out.push({ ...changeRow(id, t, taskProgress(md), 'archived', m ? m[1] : null), tasks: taskList(md) });
     }
   }
   return out.sort((a, b) => (a.story || '').localeCompare(b.story || '', undefined, { numeric: true }) || a.id.localeCompare(b.id));
@@ -119,7 +126,7 @@ export function phases(root, artifacts, trace, changes) {
 }
 
 // Requisitos con cobertura (trace) e inestabilidad (decisiones).
-export function requirementsView(root, pr, trace, epics = []) {
+export function requirementsView(root, pr, trace, epics = [], changes = []) {
   if (!trace) return { rows: [], orphans: [] };
   const rank = new Map(instabilityRanking(root, pr, trace).map((r) => [refKey(r.id), r]));
   // La cobertura se lee de epics.md (el FR Coverage Map de BMAD), que es la fuente; trace.json
@@ -129,13 +136,19 @@ export function requirementsView(root, pr, trace, epics = []) {
   const add = (r, story) => { const k = refKey(r); if (!covered.has(k)) covered.set(k, []); covered.get(k).push(story); };
   for (const e of epics) for (const st of e.stories) for (const r of st.requirements || []) add(r, st.id);
   for (const c of trace.changes || []) for (const r of c.requirements || []) add(r, c.bmad.story);
+  // Un requisito esta completo cuando TODAS las stories que lo cubren estan terminadas o
+  // archivadas. Sin stories no puede estar completo: nadie lo construyo.
+  const storyState = new Map();
+  for (const c of changes) { const cur = storyState.get(c.story); if (!cur || c.revision > cur.revision) storyState.set(c.story, c); }
+  const satisfied = (st) => ['done', 'archived'].includes(storyState.get(st)?.state);
   const groups = [['functional', 'FR'], ['nonFunctional', 'NFR'], ['ux', 'UX-DR'], ['additional', 'ADD']];
   const rows = [];
   for (const [g, label] of groups) {
     for (const r of trace.requirements?.[g] || []) {
       const k = refKey(r.id);
       const h = rank.get(k);
-      rows.push({ id: r.id, group: label, text: r.text, stories: [...new Set(covered.get(k) || [])], changes: h?.changes || 0, mentions: h?.mentions || 0, last: h?.last || null });
+      const st = [...new Set(covered.get(k) || [])];
+      rows.push({ id: r.id, group: label, text: r.text, stories: st, done: st.length > 0 && st.every(satisfied), changes: h?.changes || 0, mentions: h?.mentions || 0, last: h?.last || null });
     }
   }
   return { rows, orphans: rows.filter((r) => r.group === 'FR' && !r.stories.length).map((r) => r.id) };
@@ -201,9 +214,19 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
   }
   const phaseDates = {};
   for (const a of artifacts) { const d = dateIn(a.file); if (d && (!phaseDates[a.kind] || d < phaseDates[a.kind])) phaseDates[a.kind] = d; }
+  // Cuando se trabajo: cada dia con actividad registrada y que paso ese dia. Es lo que la
+  // linea de tiempo de trabajo dibuja; los dias sin registro no aparecen porque no se sabe.
+  const activity = new Map();
+  const day = (d) => { if (!activity.has(d)) activity.set(d, { date: d, decisions: 0, changes: 0, bridge: 0, archived: 0, artifacts: [] }); return activity.get(d); };
+  const bump = (d, k) => { if (d) day(d)[k]++; };
+  for (const a of artifacts) { const d = dateIn(a.file); if (d && a.kind !== 'decisions' && !day(d).artifacts.includes(a.kind)) day(d).artifacts.push(a.kind); }
+  for (const e of decisions.entries) bump(e.date, e.type === 'change' || e.type === 'override' || e.kind === 'change-proposal' ? 'changes' : 'decisions');
+  for (const run of ledger) bump(run.at.slice(0, 10), 'bridge');
+  for (const c of changes) if (c.archivedAt) bump(c.archivedAt, 'archived');
   return {
     requirements: { fr: fr.length, nfr: requirements.rows.filter((r) => r.group === 'NFR').length, ux: requirements.rows.filter((r) => r.group === 'UX-DR').length, total: requirements.rows.length,
       covered: fr.filter((r) => r.stories.length).length, coveragePct: fr.length ? Math.round((fr.filter((r) => r.stories.length).length / fr.length) * 100) : null,
+      done: fr.filter((r) => r.done).length, donePct: fr.length ? Math.round((fr.filter((r) => r.done).length / fr.length) * 100) : null,
       unstable: requirements.rows.filter((r) => r.changes >= 2).length },
     epics: epics.length, stories: stories.length, scenarios,
     storiesDone: closedStories.size, storiesInProgress: inProgress.size,
@@ -212,7 +235,8 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
     changes: { total: changes.length, archived: changes.length - active.length, active: active.length, revisions: changes.filter((c) => c.revision > 1).length, doneUnarchived: active.filter((c) => c.state === 'done').length },
     bridgeRuns: ledger.length,
     decisions: { total: decisions.entries.length, byKind, overrides: decisions.entries.filter((e) => e.type === 'overrides' || e.type === 'override').length, changes: decisions.entries.filter((e) => e.type === 'change' || e.kind === 'change-proposal').length },
-    dates: { first: dates[0] || null, last: dates.at(-1) || null, days: daysBetween(dates[0], dates.at(-1)), phases: phaseDates },
+    dates: { first: dates[0] || null, last: dates.at(-1) || null, days: daysBetween(dates[0], dates.at(-1)), phases: phaseDates, activeDays: activity.size },
+    activity: [...activity.values()].sort((a, b) => a.date.localeCompare(b.date)),
     sprint: sprint ? { waves: sprint.waves.length, current: sprint.current, ready: sprint.totals.ready } : null,
   };
 }
@@ -269,7 +293,7 @@ export function collectStatus(root) {
   const graph = g.graph ? readJson(path.join(root, g.graph)) : null;
   const e = detectEngram(root);
   const epics = epicsTree(root);
-  const requirements = requirementsView(root, pr, trace, epics);
+  const requirements = requirementsView(root, pr, trace, epics, changes);
   const sprint = sprintStatus(root, changes);
   const ledger = readLedger(root);
   const tl = timeline(root, pr, changes);

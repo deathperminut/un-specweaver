@@ -75,6 +75,13 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   const s3 = collectStatus(dir);
   assert.deepEqual(s3.requirements.rows.find((r) => r.id === 'FR001').stories, ['1.1']);
   assert.equal(s3.metrics.requirements.coveragePct, 100);
+
+  // FR completado = todas sus stories terminadas o archivadas. FR003 lo cubre 2.1 (archivada).
+  assert.equal(s.requirements.rows.find((r) => r.id === 'FR003').done, true);
+  assert.equal(s.requirements.rows.find((r) => r.id === 'FR001').done, false, '1.1 a medias');
+  assert.equal(s.metrics.requirements.done, 1);
+  assert.ok(s.changes[0].tasks.length > 0 && 'done' in s.changes[0].tasks[0], 'las tareas llevan texto y estado');
+  assert.ok(s.metrics.activity.some((d) => d.date === '2026-09-10' && d.archived === 1), 'la actividad por dia registra el archive');
   assert.equal(s.decisions.total, 12);
   assert.equal(s.decisions.ranking[0].id, 'FR001');
 
@@ -127,6 +134,8 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
     assert.match(html, /"id":"FR001"/, 'el modelo va embebido');
     assert.match(html, /"archivedAt":"2026-09-10"/);
     assert.match(html, /data-k="story"|\.blk\[data-k/, 'el flujo se dibuja en cliente');
+    assert.match(html, /cr\('fr'/, 'cadena de anillos clicable');
+    assert.match(html, lang === 'es' ? /Cuando se trabajo/ : /When work happened/);
     assert.match(html, /\\u003c/, 'el JSON embebido escapa < para no cerrar el script');
   }
   fs.rmSync(dir, { recursive: true, force: true });
