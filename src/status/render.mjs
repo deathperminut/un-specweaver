@@ -109,7 +109,7 @@ const UI = {
     kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Arquitectura', 'ux-designs': 'UX', 'change-proposal': 'Cambios de alcance' },
     entries: 'entradas', dec: 'decisiones', chg: 'cambios', ovr: 'descartes', asm: 'supuestos',
     funnel: 'Descomposicion', funnelHint: 'del PRD al codigo', req: 'requisitos', epics: 'epics', stories: 'stories', criteria: 'criterios', tasksN: 'tareas', specs: 'specs',
-    flow: 'Flujo: del requisito a la spec', flowHint: 'click en un bloque para ver el detalle y su camino', colReq: 'Requisitos (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
+    flow: 'Flujo: del requisito a la spec', flowHint: 'click en un bloque para ver el detalle y su camino. Filtra por epic para proyectos largos.', all: 'Todos', showNfr: 'NFR', showUx: 'UX-DR', shown: 'mostrando', colReq: 'Requisitos (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
     noStory: 'sin story', changesN: 'cambios', ac: 'AC', fr: 'FR', tasksShort: 'tareas', rev: 'rev',
     state: { pending: 'pendiente', 'in-progress': 'en curso', done: 'terminada', archived: 'archivada', missing: 'sin spec' },
     impacts: 'Cambios y a que afectaron', impactsHint: 'cada cambio registrado, los requisitos que cita y las stories que toca', affects: 'afecta a', noImpacts: 'sin cambios registrados todavia',
@@ -156,7 +156,7 @@ const UI = {
     kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Architecture', 'ux-designs': 'UX', 'change-proposal': 'Scope changes' },
     entries: 'entries', dec: 'decisions', chg: 'changes', ovr: 'discards', asm: 'assumptions',
     funnel: 'Decomposition', funnelHint: 'from PRD to code', req: 'requirements', epics: 'epics', stories: 'stories', criteria: 'criteria', tasksN: 'tasks', specs: 'specs',
-    flow: 'Flow: from requirement to spec', flowHint: 'click a block to see its detail and path', colReq: 'Requirements (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
+    flow: 'Flow: from requirement to spec', flowHint: 'click a block to see its detail and path. Filter by epic on long projects.', all: 'All', showNfr: 'NFR', showUx: 'UX-DR', shown: 'showing', colReq: 'Requirements (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
     noStory: 'no story', changesN: 'changes', ac: 'AC', fr: 'FR', tasksShort: 'tasks', rev: 'rev',
     state: { pending: 'pending', 'in-progress': 'in progress', done: 'finished', archived: 'archived', missing: 'no spec' },
     impacts: 'Changes and what they affected', impactsHint: 'each recorded change, the requirements it cites and the stories it touches', affects: 'affects', noImpacts: 'no changes recorded yet',
@@ -223,10 +223,13 @@ details.gloss summary::before{content:'▸';color:var(--acc)}details.gloss[open]
 .daylist{max-width:1000px;margin:0 auto}.daylist h4{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}.daylist .dc{margin-bottom:8px}
 .erow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.erow:last-child{border:0}.erow .k{color:var(--muted);font-size:12.5px}.erow .bars{display:flex;gap:2px;height:10px}.erow .bars i{display:block;height:100%;border-radius:2px}
 .erow .n{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-.funnel{display:flex;align-items:stretch;gap:0;overflow-x:auto}.fstep{flex:1;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;position:relative}.funnel>*+*{margin-left:22px;position:relative}.funnel>*+*::before{content:'→';position:absolute;left:-19px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px}
-.fcol{display:flex;flex-direction:column;gap:6px;flex:1;min-width:120px}.fcol .fstep{flex:1;padding:7px 12px}.fcol .fstep .v{font-size:18px}.fcol .fstep.dim{opacity:.75}
+.funnel{display:flex;align-items:center;gap:0;overflow-x:auto;padding:6px 0}.fstep{flex:1;min-width:120px;background:linear-gradient(180deg,var(--card2),var(--card));border:1px solid var(--line2);border-radius:12px;padding:14px 12px;position:relative;text-align:center;box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+.fstep .v{font-size:26px;font-weight:700;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.fstep .l{color:var(--muted);font-size:12px;margin-top:2px}.fstep[data-canvas]:hover{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-soft)}
+.funnel>*+*{margin-left:30px;position:relative}.funnel>*+*::before{content:'';position:absolute;left:-30px;top:50%;width:30px;height:2px;background:var(--line2)}.funnel>*+*::after{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%) rotate(45deg);width:7px;height:7px;border-top:2px solid var(--line2);border-right:2px solid var(--line2)}
+.fcol{display:flex;flex-direction:column;gap:6px;flex:1;min-width:130px}.fcol .fstep{padding:8px 12px;display:flex;align-items:baseline;justify-content:center;gap:8px}.fcol .fstep .v{font-size:18px}.fcol .fstep .l{margin:0}.fcol .fstep .sub{width:100%;font-size:10.5px;color:var(--dim);margin-top:-2px}
 .fstep .v{font-size:22px;font-weight:600}.fstep .l{color:var(--muted);font-size:12px}
-.flow{position:relative;background:radial-gradient(circle,var(--line) 1px,transparent 1px) 0 0/22px 22px,var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto}
+.flow{position:relative;background:radial-gradient(circle,var(--line) 1px,transparent 1px) 0 0/22px 22px,var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto;max-height:680px}
+.ftools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}.ftools .chip{cursor:pointer;padding:3px 10px;border-radius:999px;border:1px solid var(--line2);font-size:12px;color:var(--muted);background:var(--card)}.ftools .chip:hover{border-color:var(--acc)}.ftools .chip.on{color:var(--fg);border-color:var(--acc);background:var(--acc-soft)}.ftools .sep{width:1px;height:18px;background:var(--line2);margin:0 4px}.ftools small{color:var(--dim);font-size:11px}
 .cols{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:56px;position:relative;z-index:1;min-width:1000px}.col h4{margin:0 0 10px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
 .blk{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:9px 11px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,box-shadow .15s,opacity .15s;position:relative}
 .blk:hover{border-color:var(--acc)}.blk.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-soft),0 0 18px rgba(56,189,248,.15)}.blk.lit{border-color:var(--acc)}.flow.focus .blk:not(.lit):not(.sel){opacity:.28}
@@ -448,7 +451,7 @@ function effort(){
       <div class="bars">\${seg('decisions','var(--acc)',d.decisions,T.dec)}\${seg('changes','var(--warn)',d.changes,T.chg)}\${seg('overrides','var(--crit)',d.overrides,T.ovr)}\${seg('assumptions','var(--vio)',d.assumptions,T.asm)}\${other?\`<i style="width:\${w(other)};background:var(--line2)" data-canvas="stage:\${k}:all" title="\${other}"></i>\`:''}</div>
       <span class="n">\${d.decisions} \${T.dec} · \${d.changes} \${T.chg}\${d.overrides?\` · \${d.overrides} \${T.ovr}\`:''}\${d.assumptions?\` · \${d.assumptions} \${T.asm}\`:''}</span>
       <span class="docs">\${docs.map((x,i) => \`<span class="tag \${x.memlog?'vio':'acc'}" data-canvas="doc:\${k}:\${i}">\${esc(x.memlog?'memlog':x.name)}</span>\`).join('')}</span></div>\`; }).join('');
-  const f = (v,l,k,sub) => \`<div class="fstep" \${k?\`data-canvas="\${k}" style="cursor:pointer"\`:''}><div class="v">\${v}</div><div class="l">\${l}</div>\${sub?\`<div class="l" style="font-size:11px;color:var(--dim);margin-top:2px">\${sub}</div>\`:''}</div>\`;
+  const f = (v,l,k,sub) => \`<div class="fstep" \${k?\`data-canvas="\${k}" style="cursor:pointer"\`:''}><div class="v">\${v}</div><div class="l">\${l}</div>\${sub?\`<div class="l sub" style="font-size:11px;color:var(--dim)">\${sub}</div>\`:''}</div>\`;
   return \`<section><h2>\${T.effort}</h2><p class="hint">\${T.effortHint}</p><div class="effort">
     <div class="card">\${rows || \`<div class="empty">\${T.noHistory}</div>\`}<div class="legend"><span><i style="background:var(--acc)"></i>\${T.dec}</span><span><i style="background:var(--warn)"></i>\${T.chg}</span><span><i style="background:var(--crit)"></i>\${T.ovr}</span><span><i style="background:var(--vio)"></i>\${T.asm}</span><span><i style="background:var(--line2)"></i>\${T.stOther}</span></div></div>
     <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel"><div class="fcol">\${f(m.requirements.fr, 'FR', 'fr', m.requirements.removed?\`\${m.requirements.removed} \${T.frRemoved}\`:'')}\${f(m.requirements.nfr, 'NFR')}\${f(m.requirements.ux, 'UX-DR')}</div>\${f(m.epics, T.epics, null, \`\${m.stories&&m.epics?Math.round(m.stories/m.epics):0} \${T.stories} c/u\`)}\${f(m.stories, T.stories, 'stories')}\${f(m.changes.total, T.specs, 'specs')}\${f(m.tasks.total, T.tasksN, 'tasks')}</div></div>
@@ -487,17 +490,37 @@ function memlogBlock(src){
 }
 
 // ---- flujo ----------------------------------------------------------------
+// Estado del tablero: epic elegido y que tipos de requisito se muestran. En proyectos largos
+// el flujo completo es un rollo; el filtro por epic deja un bloque de valor a la vez.
+const flowState = { epic: null, nfr: false, ux: false };
+const reqType = (id) => /^UX-DR/i.test(id) ? 'ux' : /^NFR/i.test(id) ? 'nfr' : /^FR/i.test(id) ? 'fr' : 'other';
+function visibleStories(){ return flowState.epic == null ? stories : stories.filter(s => String(s.epic) === String(flowState.epic)); }
+function visibleReqs(){
+  const vs = visibleStories(); const cited = new Set(vs.flatMap(s => (s.requirements||[]).map(key)));
+  return reqIdsInFlow.filter(id => { const t = reqType(id); if (t === 'nfr' && !flowState.nfr) return false; if (t === 'ux' && !flowState.ux) return false; if (t === 'other') return false;
+    return flowState.epic == null ? (t === 'fr' || cited.has(key(id))) : cited.has(key(id)); });
+}
+function flowBoard(){
+  const vs = visibleStories(); const vr = visibleReqs();
+  const reqB = vr.map(id => { const n = reqChanges(id); const st = storiesByReq.get(key(id)) || []; const t = reqType(id); return \`<div class="blk" data-k="req" data-id="\${esc(id)}"><div class="id"><span>\${esc(id)}</span>\${n?\`<span class="tag \${n>=3?'crit':'warn'}">\${n} \${T.changesN}</span>\`:''}</div><div class="tt">\${esc(reqTextOf(id)).slice(0,110)}</div><div class="meta">\${st.length?\`<span class="tag">\${st.length} \${T.stories}</span>\`:(t==='fr'?\`<span class="tag crit">\${T.noStory}</span>\`:'')}</div></div>\`; }).join('');
+  const epicB = M.epics.filter(e => flowState.epic == null || String(e.n) === String(flowState.epic)).map(e => \`<div class="blk" data-k="epic" data-id="\${e.n}"><div class="id"><span>Epic \${e.n}</span><span class="tag">\${e.stories.length} \${T.stories}</span></div><div class="tt">\${esc(e.title)}</div></div>\`).join('');
+  const storyB = vs.map(s => \`<div class="blk" data-k="story" data-id="\${esc(s.id)}"><div class="id"><span>Story \${esc(s.id)}</span><span class="tag dim">Epic \${s.epic}</span></div><div class="tt">\${esc(s.title)}</div><div class="meta"><span class="tag">\${s.criteria.length} \${T.ac}</span>\${(s.requirements||[]).slice(0,4).map(r => \`<span class="tag fr">\${esc(r)}</span>\`).join('')}\${(s.requirements||[]).length>4?\`<span class="tag">+\${s.requirements.length-4}</span>\`:''}</div></div>\`).join('');
+  const specB = vs.map(s => { const c = specByStory.get(s.id); if (!c) return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}" style="border-style:dashed"><div class="id"><span>Story \${esc(s.id)}</span></div><div class="meta"><span class="st missing">\${T.state.missing}</span></div></div>\`;
+    return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}"><div class="id"><span>\${esc(c.id.length>34?c.id.slice(0,32)+'…':c.id)}</span>\${c.revision>1?\`<span class="tag crit">\${T.rev} \${c.revision}</span>\`:''}</div><div class="meta"><span class="st \${c.state}">\${T.state[c.state]}\${c.archivedAt?\` · \${c.archivedAt}\`:''}</span>\${c.state!=='archived'?\`<span class="tag">\${c.progress.done}/\${c.progress.total} \${T.tasksShort}</span>\`:''}</div>\${c.state!=='archived'?\`<div class="mini"><i style="width:\${pct(c.progress.done,c.progress.total)}%"></i></div>\`:''}</div>\`; }).join('');
+  return \`<svg class="wires" id="wires"></svg><div class="cols">
+    <div class="col"><h4>\${T.colReq} <small>· \${vr.length}</small></h4>\${reqB}</div><div class="col"><h4>\${T.colEpic}</h4>\${epicB}</div><div class="col"><h4>\${T.colStory} <small>· \${vs.length}</small></h4>\${storyB}</div><div class="col"><h4>\${T.colSpec}</h4>\${specB}</div>
+  </div>\`;
+}
+function flowTools(){
+  const nN = reqIdsInFlow.filter(id => reqType(id)==='nfr').length, uN = reqIdsInFlow.filter(id => reqType(id)==='ux').length;
+  return \`<div class="ftools"><span class="chip \${flowState.epic==null?'on':''}" data-epic="">\${T.all}</span>\${M.epics.map(e => \`<span class="chip \${String(flowState.epic)===String(e.n)?'on':''}" data-epic="\${e.n}" title="\${esc(e.title)}">Epic \${e.n} <small>\${e.stories.length}</small></span>\`).join('')}
+    <span class="sep"></span><small>\${T.colReq}:</small><span class="chip on" style="cursor:default">FR</span>\${nN?\`<span class="chip \${flowState.nfr?'on':''}" data-rt="nfr">\${T.showNfr} <small>\${nN}</small></span>\`:''}\${uN?\`<span class="chip \${flowState.ux?'on':''}" data-rt="ux">\${T.showUx} <small>\${uN}</small></span>\`:''}</div>\`;
+}
 function flow(){
   if (!stories.length && !reqIdsInFlow.length) return \`<section><h2>\${T.flow}</h2><div class="empty">\${T.empty}</div></section>\`;
-  const reqB = reqIdsInFlow.map(id => { const n = reqChanges(id); const st = storiesByReq.get(key(id)) || []; return \`<div class="blk" data-k="req" data-id="\${esc(id)}"><div class="id"><span>\${esc(id)}</span>\${n?\`<span class="tag \${n>=3?'crit':'warn'}">\${n} \${T.changesN}</span>\`:''}</div><div class="tt">\${esc(reqTextOf(id)).slice(0,110)}</div><div class="meta">\${st.length?\`<span class="tag">\${st.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.noStory}</span>\`}</div></div>\`; }).join('');
-  const epicB = M.epics.map(e => \`<div class="blk" data-k="epic" data-id="\${e.n}"><div class="id"><span>Epic \${e.n}</span><span class="tag">\${e.stories.length} \${T.stories}</span></div><div class="tt">\${esc(e.title)}</div></div>\`).join('');
-  const storyB = stories.map(s => { const sp = specByStory.get(s.id); return \`<div class="blk" data-k="story" data-id="\${esc(s.id)}"><div class="id"><span>Story \${esc(s.id)}</span><span class="tag dim">Epic \${s.epic}</span></div><div class="tt">\${esc(s.title)}</div><div class="meta"><span class="tag">\${s.criteria.length} \${T.ac}</span>\${(s.requirements||[]).slice(0,4).map(r => \`<span class="tag fr">\${esc(r)}</span>\`).join('')}\${(s.requirements||[]).length>4?\`<span class="tag">+\${s.requirements.length-4}</span>\`:''}</div></div>\`; }).join('');
-  const specB = stories.map(s => { const c = specByStory.get(s.id); if (!c) return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}" style="border-style:dashed"><div class="id"><span>Story \${esc(s.id)}</span></div><div class="meta"><span class="st missing">\${T.state.missing}</span></div></div>\`;
-    return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}"><div class="id"><span>\${esc(c.id.length>34?c.id.slice(0,32)+'…':c.id)}</span>\${c.revision>1?\`<span class="tag crit">\${T.rev} \${c.revision}</span>\`:''}</div><div class="meta"><span class="st \${c.state}">\${T.state[c.state]}\${c.archivedAt?\` · \${c.archivedAt}\`:''}</span>\${c.state!=='archived'?\`<span class="tag">\${c.progress.done}/\${c.progress.total} \${T.tasksShort}</span>\`:''}</div>\${c.state!=='archived'?\`<div class="mini"><i style="width:\${pct(c.progress.done,c.progress.total)}%"></i></div>\`:''}</div>\`; }).join('');
-  return \`<section><h2>\${T.flow}</h2><p class="hint">\${T.flowHint}</p><div class="flow" id="flow"><svg class="wires" id="wires"></svg><div class="cols">
-    <div class="col"><h4>\${T.colReq}</h4>\${reqB}</div><div class="col"><h4>\${T.colEpic}</h4>\${epicB}</div><div class="col"><h4>\${T.colStory}</h4>\${storyB}</div><div class="col"><h4>\${T.colSpec}</h4>\${specB}</div>
-  </div></div></section>\`;
+  return \`<section id="flowsec"><h2>\${T.flow}</h2><p class="hint">\${T.flowHint}</p><div id="ftools">\${flowTools()}</div><div class="flow" id="flow">\${flowBoard()}</div></section>\`;
 }
+function rerenderFlow(){ const f = $('#flow'); if (!f) return; $('#ftools').innerHTML = flowTools(); f.classList.remove('focus'); f.innerHTML = flowBoard(); drawWires(null); }
 // aristas: req->story, epic->story, story->spec
 function edges(){
   const E = [];
@@ -583,6 +606,8 @@ $('#app').innerHTML = header() + \`<main>\${glossary()}\${hero()}\${workSec()}\$
 drawWires(null); addEventListener('resize', () => drawWires(null));
 document.addEventListener('click', (ev) => {
   const cv = ev.target.closest('[data-canvas]'); if (cv) { openCanvas(cv.dataset.canvas); return; }
+  const ep = ev.target.closest('[data-epic]'); if (ep) { flowState.epic = ep.dataset.epic === '' ? null : ep.dataset.epic; closeDrawer(); rerenderFlow(); return; }
+  const rt = ev.target.closest('[data-rt]'); if (rt) { flowState[rt.dataset.rt] = !flowState[rt.dataset.rt]; closeDrawer(); rerenderFlow(); return; }
   if (ev.target.closest('[data-close-canvas]')) { closeCanvas(); return; }
   const tab = ev.target.closest('.tab'); if (tab) { const bar = tab.parentElement; const scope = bar.closest('.canvas, section'); bar.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t===tab)); scope.querySelectorAll(':scope .pane[data-pane]').forEach(p => p.classList.toggle('on', p.dataset.pane===tab.dataset.tab)); return; }
   const o = ev.target.closest('[data-open]'); if (o) { const [k,...rest] = o.dataset.open.split(':'); open(k, rest.join(':')); return; }
