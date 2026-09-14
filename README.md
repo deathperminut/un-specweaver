@@ -63,6 +63,8 @@ Once comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en Ope
                                       │
                                       ▼
                     /sw:close la valida y archiva (linea base)
+
+   /sw:status ──▶ ¿como vamos? el dashboard, en cualquier momento
 ```
 
 | Comando | Cuando |
@@ -75,7 +77,7 @@ Once comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en Ope
 | `/sw:ticket <n>` | issue de GitHub: clasifica y enruta a uno de los dos anteriores |
 | `/sw:sprint` | recalcula que se puede paralelizar segun dependencias reales |
 | `/sw:sync` | actualizar las herramientas de forma controlada |
-| `/sw:status` | en que va el proyecto: fases, changes con avance, olas, requisitos inestables, historial |
+| `/sw:status` | ¿como vamos? — abre el **dashboard** (`status --open`) y lo interpreta: que se puede empezar, que esta inestable, que falta cerrar |
 | `/sw:close [id]` | cerrar stories terminadas: validar y archivar su spec. **Terminar no es cerrar** |
 | `/sw:doctor` | salud del entorno y coherencia del flujo |
 
