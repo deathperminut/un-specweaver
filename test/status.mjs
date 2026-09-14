@@ -81,6 +81,7 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.equal(s.requirements.rows.find((r) => r.id === 'FR001').done, false, '1.1 a medias');
   assert.equal(s.metrics.requirements.done, 1);
   assert.ok(s.changes[0].tasks.length > 0 && 'done' in s.changes[0].tasks[0], 'las tareas llevan texto y estado');
+  assert.equal(s.changes[0].tasks[0].n, '1.1'); assert.match(s.changes[0].tasks[0].section, /Implementacion/);
   assert.ok(s.metrics.activity.some((d) => d.date === '2026-09-10' && d.archived === 1), 'la actividad por dia registra el archive');
   assert.equal(s.decisions.total, 12);
   assert.equal(s.decisions.ranking[0].id, 'FR001');
@@ -130,6 +131,7 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
     assert.doesNotMatch(html, /<script>alert/, 'nada de los archivos puede cerrar el script de datos');
     assert.match(html, /\\u003cscript>alert\(1\)\\u003c\/script>/, 'va en el JSON con < escapado; el cliente lo escapa al pintar');
     assert.match(html, /const esc = \(x\) =>/, 'el cliente escapa todo texto que viene de archivos');
+    assert.match(html, /replace\(\/\\\*\\\*\(\[\^\*\]\+\)\\\*\\\*\/g/, 'la regex de negrita llega escapada al cliente (un \\* sin escapar la volvia un comentario)');
     assert.match(html, lang === 'es' ? /¿Como vamos\?/ : /How are we doing\?/);
     assert.match(html, /"id":"FR001"/, 'el modelo va embebido');
     assert.match(html, /"archivedAt":"2026-09-10"/);

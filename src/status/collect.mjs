@@ -26,8 +26,15 @@ export function taskProgress(md) {
 
 // Las tareas con su texto: es lo que el canvas de "tareas" abre al hacer click.
 export function taskList(md) {
-  return String(md || '').split('\n').map((l) => l.match(/^\s*- \[([ xX])\] (.*)$/)).filter(Boolean)
-    .map((m) => ({ done: m[1] !== ' ', text: m[2].trim() }));
+  const out = [];
+  let section = '';
+  for (const l of String(md || '').split('\n')) {
+    const h = l.match(/^#{1,3}\s+(.+?)\s*$/);
+    if (h) { section = h[1].replace(/^\d+\.\s*/, ''); continue; }
+    const m = l.match(/^\s*- \[([ xX])\] (?:(\d+(?:\.\d+)*)\s+)?(.*)$/);
+    if (m) out.push({ done: m[1] !== ' ', n: m[2] || '', text: m[3].trim(), section });
+  }
+  return out;
 }
 
 // Los changes de OpenSpec, activos y archivados, con su estado derivado.

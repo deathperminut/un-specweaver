@@ -246,6 +246,9 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 20px}.tab{padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-size:13px}.tab.on{color:var(--fg);border-color:var(--acc)}.tab b{font-family:var(--mono);font-weight:500;margin-left:6px;color:var(--acc)}
 .canvas .cb{flex:1;overflow-y:auto;padding:16px 20px 40px}.pane{display:none;max-width:1100px;margin:0 auto}.pane.on{display:block}
 details.it{background:var(--card);border:1px solid var(--line);border-radius:8px;margin-bottom:8px}details.it summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}details.it summary::before{content:'▸';color:var(--acc);font-size:12px}details.it[open] summary::before{content:'▾'}details.it .body{padding:0 14px 12px 32px;color:var(--muted);font-size:13px}details.it .body p{margin:6px 0;color:var(--fg)}
+.tsec{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:10px 0 4px;padding-bottom:3px;border-bottom:1px solid var(--line)}.tk{display:grid;grid-template-columns:22px 44px 1fr;gap:8px;align-items:start;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px;color:var(--fg)}.tk:last-child{border:0}
+.tk .cb{width:16px;height:16px;border:1.5px solid var(--line2);border-radius:4px;display:grid;place-items:center;font-size:11px;color:var(--good);margin-top:2px}.tk.done .cb{border-color:var(--good);background:var(--good-soft)}.tk .n{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px}.tk .tx{line-height:1.5}.tk .tx code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}
+details.it .body code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}.dc p code,.tl p code{background:var(--card2);border:1px solid var(--line);padding:0 4px;border-radius:4px;color:var(--acc)}
 .expl{background:var(--card2);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--fg)}
 .work{display:flex;align-items:flex-start;overflow-x:auto;padding:14px 4px 4px}.wd{min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;position:relative}.wd time{font-family:var(--mono);color:var(--acc);font-size:12px}.wd .k{margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}.wd .k b{color:var(--fg);font-weight:500;font-family:var(--mono);margin-right:4px}
 .wgap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px;color:var(--dim);font-size:11px;font-family:var(--mono);position:relative}.wgap::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--line2)}.wgap span{background:var(--bg);padding:0 6px;position:relative}
@@ -264,6 +267,8 @@ const esc = (x) => String(x ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&l
 const key = (id) => String(id).replace(/[-_ ]/g,'').toUpperCase();
 const cssEsc = (v) => (window.CSS && CSS.escape) ? CSS.escape(v) : String(v).replace(/["\\\\]/g, '\\\\$&');
 const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+// Los textos de BMAD y de tasks.md traen markdown minimo: \`codigo\` y **negrita**. Se escapa primero.
+const md = (x) => esc(x).replace(/\`([^\`]+)\`/g, '<code>$1</code>').replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>');
 const m = M.metrics;
 
 // ---- indices -------------------------------------------------------------
@@ -294,7 +299,7 @@ function hero(){
   const rq = m.requirements; const sp = M.sprint;
   const cr = (k, p, l, sub) => \`<div class="cring" data-canvas="\${k}">\${ring(p)}<div class="l">\${l}</div><div class="s">\${sub}</div></div>\`;
   const chain = \`<div class="chain">
-    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\`)}
+    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\`)}
     \${cr('stories', m.storiesPct, T.storiesDoneShort, \`\${m.storiesDone} \${T.of} \${m.stories}\`)}
     \${cr('specs', pct(m.changes.archived, m.changes.total), T.specsDone, \`\${m.changes.archived} \${T.of} \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`)}
     \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
@@ -303,8 +308,6 @@ function hero(){
   const tile = (v, l, sub) => \`<div class="tile"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div></div>\`;
   const tiles = \`<div class="tiles" style="margin-top:12px">
     \${tile(sp&&sp.current?sp.current:'—', T.wave, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
-    \${tile(rq.coveragePct==null?'—':rq.coveragePct+'%', T.coverage, rq.fr?\`\${rq.covered}/\${rq.fr} FR\`:'')}
-    \${tile(m.changes.revisions, T.revisions, '')}
     \${tile(m.dates.activeDays||0, T.activeDays, m.dates.days!=null?\`· \${m.dates.days} \${T.days}\`:'')}
   </div>\`;
   return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}\${alert}\${tiles}
@@ -335,13 +338,14 @@ function canvasData(k){
     return { title: T.canvasSpecs, done: M.changes.filter(c => c.state==='archived').map(mk), pending: M.changes.filter(c => c.state!=='archived').map(mk) };
   }
   if (k==='tasks') {
-    const groups = (pred) => M.changes.map(c => ({ c, t: c.tasks.filter(pred) })).filter(g => g.t.length).map(g => item(\`<b class="mono" style="color:var(--acc)">Story \${esc(g.c.story||'')}</b> <span>\${esc(g.c.title)}</span>\`, \`<span class="tag">\${g.t.length} \${T.tasksShort}</span>\`, g.t.map(t => \`<p>\${t.done?'☑':'☐'} \${esc(t.text)}</p>\`).join('')));
+    const rows = (list) => { let sec = null; return list.map(t => { const h = t.section !== sec ? \`<div class="tsec">\${esc(t.section)}</div>\` : ''; sec = t.section; return h + \`<div class="tk \${t.done?'done':''}"><span class="cb">\${t.done?'✓':''}</span><span class="n">\${esc(t.n)}</span><span class="tx">\${md(t.text)}</span></div>\`; }).join(''); };
+    const groups = (pred) => M.changes.map(c => ({ c, t: c.tasks.filter(pred) })).filter(g => g.t.length).map(g => item(\`<b class="mono" style="color:var(--acc)">Story \${esc(g.c.story||'')}</b> <span>\${esc(g.c.title)}</span>\`, \`<span class="tag">\${g.t.length} \${T.tasksShort}</span>\`, rows(g.t)));
     return { title: T.canvasTasks, done: groups(t => t.done), pending: groups(t => !t.done) };
   }
   if (k==='unstable') {
     const rows = reqRows.filter(r => r.changes >= 2).sort((a,b) => b.changes-a.changes);
     const mk = (r) => { const ev = M.history[r.id] || []; return item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`, \`<span class="tag \${r.changes>=3?'crit':'warn'}">\${r.changes} \${T.changesN}</span>\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.frNoStory}</span>\`}\`,
-      \`<ul class="tl">\${ev.map(e => \`<li class="t-\${esc(e.type)}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(e.source)}</span></div><p>\${esc(e.text)}</p></li>\`).join('')}</ul>\${r.stories.length?\`<p>\${T.affects}: \${r.stories.map(storyLine).join('<br>')}</p>\`:''}\`); };
+      \`<ul class="tl">\${ev.map(e => \`<li class="t-\${esc(e.type)}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(e.source)}</span></div><p>\${md(e.text)}</p></li>\`).join('')}</ul>\${r.stories.length?\`<p>\${T.affects}: \${r.stories.map(storyLine).join('<br>')}</p>\`:''}\`); };
     return { title: T.canvasUnstable, expl: T.alertWhy, done: [], pending: rows.map(mk), single: true };
   }
 }
@@ -427,7 +431,7 @@ function impactsBody(){
 function keyBody(){
   const groups = {}; for (const d of M.decisions.key) (groups[d.kind] = groups[d.kind] || []).push(d);
   const order = ['briefs','prds','architecture','ux-designs'];
-  const body = order.filter(k => groups[k]).map(k => \`<div class="grp"><h4>\${esc(T.kind[k]||k)}</h4><div class="cards">\${groups[k].map(d => \`<div class="dc \${d.type}"><div class="h"><span class="tag \${d.type==='override'?'crit':d.type==='constraint'?'warn':d.type==='direction'?'vio':'acc'}">\${esc(T.type[d.type]||d.type)}</span>\${d.date?\`<time>\${esc(d.date)}</time>\`:''}</div><p>\${esc(d.text)}</p>\${d.refs.length?\`<div class="refs">\${d.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('')}</div></div>\`).join('');
+  const body = order.filter(k => groups[k]).map(k => \`<div class="grp"><h4>\${esc(T.kind[k]||k)}</h4><div class="cards">\${groups[k].map(d => \`<div class="dc \${d.type}"><div class="h"><span class="tag \${d.type==='override'?'crit':d.type==='constraint'?'warn':d.type==='direction'?'vio':'acc'}">\${esc(T.type[d.type]||d.type)}</span>\${d.date?\`<time>\${esc(d.date)}</time>\`:''}</div><p>\${md(d.text)}</p>\${d.refs.length?\`<div class="refs">\${d.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('')}</div></div>\`).join('');
   return \`<p class="hint">\${T.keyHint}</p>\${body || \`<div class="empty">\${T.noHistory}</div>\`}\`;
 }
 function historyBody(){
@@ -435,7 +439,7 @@ function historyBody(){
   if (!ev.length) return \`<div class="empty">\${T.noHistory}</div>\`;
   let last = null; const items = [];
   for (const e of ev) { if (e.when !== last) { items.push(\`<li class="day">\${esc(e.when||'—')}</li>\`); last = e.when; }
-    items.push(\`<li class="t-\${esc(e.type)}"><div class="h"><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':e.type==='archived'||e.type==='generated'?'fr':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span>\${(e.refs||[]).slice(0,6).map(r => /^Story /.test(r)?\`<span class="tag acc chip" data-open="story:\${esc(r.slice(6))}">\${esc(r)}</span>\`:\`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div><p>\${esc(e.text)}</p><small>\${esc(e.file)}</small></li>\`); }
+    items.push(\`<li class="t-\${esc(e.type)}"><div class="h"><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':e.type==='archived'||e.type==='generated'?'fr':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span>\${(e.refs||[]).slice(0,6).map(r => /^Story /.test(r)?\`<span class="tag acc chip" data-open="story:\${esc(r.slice(6))}">\${esc(r)}</span>\`:\`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div><p>\${md(e.text)}</p><small>\${esc(e.file)}</small></li>\`); }
   return \`<p class="hint">\${T.historyHint}</p><div class="card"><ul class="tl">\${items.join('')}</ul></div>\`;
 }
 function statsBody(){
