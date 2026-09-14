@@ -94,7 +94,7 @@ const UI = {
     alertUnstable: 'requisitos inestables', alertHint: 'han cambiado 2 o mas veces despues de nacer — click para ver cuales y por que',
     alertNone: 'ningun requisito inestable', alertWhy: 'Un requisito que cambia varias veces es un requisito que el equipo no entiende igual. Cada cambio arrastra stories, specs y codigo ya hecho. Antes de tocar uno de estos, lee su historial y confirma con quien lo pidio.',
     tabDone: 'Completados', tabPending: 'Pendientes', canvasFR: 'Requisitos funcionales', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tareas', canvasUnstable: 'Requisitos inestables',
-    frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminado por decision',
+    frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
     work: 'Cuando se trabajo', workHint: 'cada dia con actividad registrada y que paso ese dia. Los dias sin registro no aparecen: no se sabe que paso.',
     dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', gap: 'dias sin registro', activeDays: 'dias con actividad',
     memory: 'Memoria del proyecto', tabHistory: 'Historial paso a paso', tabKey: 'Decisiones clave', tabImpacts: 'Cambios e impacto', tabStats: 'Por etapa',
@@ -140,7 +140,7 @@ const UI = {
     alertUnstable: 'unstable requirements', alertHint: 'changed 2 or more times after birth — click to see which and why',
     alertNone: 'no unstable requirements', alertWhy: 'A requirement that changes several times is one the team does not understand the same way. Each change drags stories, specs and code already done. Before touching one of these, read its history and confirm with whoever asked for it.',
     tabDone: 'Completed', tabPending: 'Pending', canvasFR: 'Functional requirements', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tasks', canvasUnstable: 'Unstable requirements',
-    frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision',
+    frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
     work: 'When work happened', workHint: 'every day with recorded activity and what happened. Days without records do not appear: nobody knows what happened.',
     dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', gap: 'days without records', activeDays: 'active days',
     memory: 'Project memory', tabHistory: 'Step-by-step history', tabKey: 'Key decisions', tabImpacts: 'Changes and impact', tabStats: 'Per stage',
@@ -278,7 +278,7 @@ const storyById = new Map(stories.map(s => [s.id, s]));
 const specByStory = new Map(); for (const c of M.changes) { const cur = specByStory.get(c.story); if (!cur || c.revision > cur.revision || (c.revision===cur.revision && c.state==='archived')) specByStory.set(c.story, c); }
 // requisito -> stories (desde epics.md, que trae el coverage map; no depende del trace)
 const storiesByReq = new Map(); for (const s of stories) for (const r of s.requirements||[]) { const k = key(r); if (!storiesByReq.has(k)) storiesByReq.set(k, []); storiesByReq.get(k).push(s.id); }
-const reqIdsInFlow = reqRows.length ? reqRows.filter(r => r.group==='FR' || storiesByReq.has(key(r.id))).map(r => r.id) : [...new Set(stories.flatMap(s => s.requirements||[]))];
+const reqIdsInFlow = reqRows.length ? reqRows.filter(r => !r.removed && (r.group==='FR' || storiesByReq.has(key(r.id)))).map(r => r.id) : [...new Set(stories.flatMap(s => s.requirements||[]))];
 const reqTextOf = (id) => reqByKey.get(key(id))?.text || '';
 const reqChanges = (id) => reqByKey.get(key(id))?.changes ?? (M.decisions.ranking.find(r => key(r.id)===key(id))?.changes || 0);
 
@@ -299,7 +299,7 @@ function hero(){
   const rq = m.requirements; const sp = M.sprint;
   const cr = (k, p, l, sub) => \`<div class="cring" data-canvas="\${k}">\${ring(p)}<div class="l">\${l}</div><div class="s">\${sub}</div></div>\`;
   const chain = \`<div class="chain">
-    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\`)}
+    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\${rq.removed?\` · \${rq.removed} \${T.frRemoved}\`:''}\`)}
     \${cr('stories', m.storiesPct, T.storiesDoneShort, \`\${m.storiesDone} \${T.of} \${m.stories}\`)}
     \${cr('specs', pct(m.changes.archived, m.changes.total), T.specsDone, \`\${m.changes.archived} \${T.of} \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`)}
     \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
@@ -319,11 +319,13 @@ function canvasData(k){
   const item = (head, tags, body) => ({ head, tags, body });
   const storyLine = (sid) => { const st = storyById.get(sid); const c = specByStory.get(sid); return \`<span class="tag acc link" data-open="story:\${esc(sid)}">Story \${esc(sid)}</span> \${esc(st?.title||'')} <span class="st \${c?c.state:'missing'}">\${T.state[c?c.state:'missing']}</span>\`; };
   if (k==='fr') {
-    const rows = reqRows.filter(r => r.group==='FR');
+    const rows = reqRows.filter(r => r.group==='FR' && !r.removed);
+    const removed = reqRows.filter(r => r.group==='FR' && r.removed);
     const mk = (r) => item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`,
       \`\${r.changes?\`<span class="tag \${r.changes>=3?'crit':'warn'}">\${r.changes} \${T.changesN}</span>\`:''}\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.frNoStory}</span>\`}\`,
       \`\${r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.frNoStory}</p>\`}\`);
-    return { title: T.canvasFR, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done).map(mk) };
+    const mkr = (r) => item(\`<b class="mono" style="color:var(--dim)"><s>\${esc(r.id)}</s></b> <span style="color:var(--muted)">\${esc(r.text)}</span>\`, \`<span class="tag dim">\${T.frRemoved}\${r.removedAt?\` · \${r.removedAt}\`:''}</span>\`, \`<p>\${T.frRemovedHint}</p>\`);
+    return { title: T.canvasFR, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done).map(mk), removed: removed.map(mkr) };
   }
   if (k==='stories') {
     const mk = (s) => { const c = specByStory.get(s.id); return item(\`<b class="mono" style="color:var(--acc)">Story \${esc(s.id)}</b> <span>\${esc(s.title)}</span>\`,
@@ -354,7 +356,7 @@ function openCanvas(k){
   const list = (arr) => arr.length ? arr.map(i => \`<details class="it"><summary>\${i.head}<span class="sp" style="flex:1"></span>\${i.tags}</summary><div class="body">\${i.body}</div></details>\`).join('') : \`<div class="empty">—</div>\`;
   c.innerHTML = \`<div class="ch"><h3>\${esc(d.title)}</h3><span class="sp"></span><button class="x" data-close-canvas>\${T.close} (Esc)</button></div>
     \${d.single ? '' : \`<div class="tabs"><div class="tab on" data-tab="done">\${T.tabDone}<b>\${d.done.length}</b></div><div class="tab" data-tab="pending">\${T.tabPending}<b>\${d.pending.length}</b></div></div>\`}
-    <div class="cb">\${d.expl?\`<div class="expl">\${esc(d.expl)}</div>\`:''}\${d.single ? \`<div class="pane on">\${list(d.pending)}</div>\` : \`<div class="pane on" data-pane="done">\${list(d.done)}</div><div class="pane" data-pane="pending">\${list(d.pending)}</div>\`}</div>\`;
+    <div class="cb">\${d.expl?\`<div class="expl">\${esc(d.expl)}</div>\`:''}\${d.single ? \`<div class="pane on">\${list(d.pending)}</div>\` : \`<div class="pane on" data-pane="done">\${list(d.done)}</div><div class="pane" data-pane="pending">\${list(d.pending)}\${d.removed&&d.removed.length?\`<div class="grp"><h4>\${T.frRemoved} (\${d.removed.length})</h4>\${list(d.removed)}</div>\`:''}</div>\`}</div>\`;
   c.classList.add('open'); document.body.style.overflow = 'hidden';
 }
 function closeCanvas(){ $('#canvas').classList.remove('open'); document.body.style.overflow = ''; }

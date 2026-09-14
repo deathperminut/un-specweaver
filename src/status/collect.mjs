@@ -133,8 +133,11 @@ export function phases(root, artifacts, trace, changes) {
 }
 
 // Requisitos con cobertura (trace) e inestabilidad (decisiones).
-export function requirementsView(root, pr, trace, epics = [], changes = []) {
-  if (!trace) return { rows: [], orphans: [] };
+// El inventario sale de epics.md (la fuente, con los eliminados tachados); trace.json es
+// derivado y solo se usa si no hay epics.md.
+export function requirementsView(root, pr, trace, epics = [], changes = [], inventory = null) {
+  const reqs = inventory || trace?.requirements;
+  if (!reqs) return { rows: [], orphans: [] };
   const rank = new Map(instabilityRanking(root, pr, trace).map((r) => [refKey(r.id), r]));
   // La cobertura se lee de epics.md (el FR Coverage Map de BMAD), que es la fuente; trace.json
   // es derivado y puede estar incompleto. Caso real: un trace danado por el bug de --only
@@ -142,7 +145,7 @@ export function requirementsView(root, pr, trace, epics = [], changes = []) {
   const covered = new Map();
   const add = (r, story) => { const k = refKey(r); if (!covered.has(k)) covered.set(k, []); covered.get(k).push(story); };
   for (const e of epics) for (const st of e.stories) for (const r of st.requirements || []) add(r, st.id);
-  for (const c of trace.changes || []) for (const r of c.requirements || []) add(r, c.bmad.story);
+  for (const c of trace?.changes || []) for (const r of c.requirements || []) add(r, c.bmad.story);
   // Un requisito esta completo cuando TODAS las stories que lo cubren estan terminadas o
   // archivadas. Sin stories no puede estar completo: nadie lo construyo.
   const storyState = new Map();
@@ -151,14 +154,14 @@ export function requirementsView(root, pr, trace, epics = [], changes = []) {
   const groups = [['functional', 'FR'], ['nonFunctional', 'NFR'], ['ux', 'UX-DR'], ['additional', 'ADD']];
   const rows = [];
   for (const [g, label] of groups) {
-    for (const r of trace.requirements?.[g] || []) {
+    for (const r of reqs?.[g] || []) {
       const k = refKey(r.id);
       const h = rank.get(k);
       const st = [...new Set(covered.get(k) || [])];
-      rows.push({ id: r.id, group: label, text: r.text, stories: st, done: st.length > 0 && st.every(satisfied), changes: h?.changes || 0, mentions: h?.mentions || 0, last: h?.last || null });
+      rows.push({ id: r.id, group: label, text: r.text, removed: !!r.removed, removedAt: r.removedAt || null, stories: st, done: !r.removed && st.length > 0 && st.every(satisfied), changes: h?.changes || 0, mentions: h?.mentions || 0, last: h?.last || null });
     }
   }
-  return { rows, orphans: rows.filter((r) => r.group === 'FR' && !r.stories.length).map((r) => r.id) };
+  return { rows, orphans: rows.filter((r) => r.group === 'FR' && !r.removed && !r.stories.length).map((r) => r.id) };
 }
 
 // Linea de tiempo unica: decisiones que cambian algo, corridas del puente, archives.
@@ -181,10 +184,14 @@ export function timeline(root, pr, changes) {
 
 // El arbol de planeacion tal como lo escribio BMAD: epics, stories y sus criterios. Es lo que
 // el flujo PRD → requisito → epic → story → spec necesita para dibujarse.
-export function epicsTree(root) {
+export function readPlanning(root) {
   const f = findEpics(root)[0];
-  if (!f) return [];
-  const doc = parseEpics(readText(f));
+  if (!f) return null;
+  return parseEpics(readText(f));
+}
+
+export function epicsTree(root, doc = readPlanning(root)) {
+  if (!doc) return [];
   return doc.epics.map((e) => ({
     n: e.n, title: e.title, goal: e.goal,
     stories: e.stories.map((st) => ({
@@ -207,7 +214,9 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
   const active = changes.filter((c) => c.state !== 'archived');
   const closedStories = new Set(changes.filter((c) => c.state === 'archived' || c.state === 'done').map((c) => c.story));
   const inProgress = new Set(changes.filter((c) => c.state === 'in-progress').map((c) => c.story));
-  const fr = requirements.rows.filter((r) => r.group === 'FR');
+  // Los eliminados por decision no cuentan como vivos: ni en el total, ni como 'sin story'.
+  const fr = requirements.rows.filter((r) => r.group === 'FR' && !r.removed);
+  const removed = requirements.rows.filter((r) => r.removed).length;
   const dates = [...artifacts.map((a) => dateIn(a.file)), ...timeline.map((e) => e.when)].filter(Boolean).sort();
   const byKind = {};
   for (const e of decisions.entries) {
@@ -233,7 +242,7 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
   return {
     requirements: { fr: fr.length, nfr: requirements.rows.filter((r) => r.group === 'NFR').length, ux: requirements.rows.filter((r) => r.group === 'UX-DR').length, total: requirements.rows.length,
       covered: fr.filter((r) => r.stories.length).length, coveragePct: fr.length ? Math.round((fr.filter((r) => r.stories.length).length / fr.length) * 100) : null,
-      done: fr.filter((r) => r.done).length, donePct: fr.length ? Math.round((fr.filter((r) => r.done).length / fr.length) * 100) : null,
+      done: fr.filter((r) => r.done).length, donePct: fr.length ? Math.round((fr.filter((r) => r.done).length / fr.length) * 100) : null, removed,
       unstable: requirements.rows.filter((r) => r.changes >= 2).length },
     epics: epics.length, stories: stories.length, scenarios,
     storiesDone: closedStories.size, storiesInProgress: inProgress.size,
@@ -299,8 +308,9 @@ export function collectStatus(root) {
   const g = detectGraphify(root);
   const graph = g.graph ? readJson(path.join(root, g.graph)) : null;
   const e = detectEngram(root);
-  const epics = epicsTree(root);
-  const requirements = requirementsView(root, pr, trace, epics, changes);
+  const doc = readPlanning(root);
+  const epics = epicsTree(root, doc);
+  const requirements = requirementsView(root, pr, trace, epics, changes, doc?.requirements || null);
   const sprint = sprintStatus(root, changes);
   const ledger = readLedger(root);
   const tl = timeline(root, pr, changes);
@@ -310,7 +320,7 @@ export function collectStatus(root) {
 
   return {
     generatedAt: new Date().toISOString(),
-    project: { name: trace?.project || path.basename(root), root, lang: state?.preferences?.lang || state?.lang || 'es', agents: state?.agents || [], installedAt: state?.installedAt || null, vendors: state?.vendors || null },
+    project: { name: doc?.projectName || trace?.project || path.basename(root), root, lang: state?.preferences?.lang || state?.lang || 'es', agents: state?.agents || [], installedAt: state?.installedAt || null, vendors: state?.vendors || null },
     phases: phases(root, artifacts, trace, changes),
     metrics: metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline: tl, sprint }),
     epics,

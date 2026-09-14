@@ -80,6 +80,10 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.equal(s.requirements.rows.find((r) => r.id === 'FR003').done, true);
   assert.equal(s.requirements.rows.find((r) => r.id === 'FR001').done, false, '1.1 a medias');
   assert.equal(s.metrics.requirements.done, 1);
+  // FR005 esta eliminado en el fixture: no es vivo, no es huerfano, y el inventario viene de epics.md.
+  assert.equal(s.metrics.requirements.fr, 4); assert.equal(s.metrics.requirements.removed, 1);
+  assert.ok(s.requirements.rows.find((r) => r.id === 'FR005').removed);
+  assert.equal(s.metrics.requirements.coveragePct, 100);
   assert.ok(s.changes[0].tasks.length > 0 && 'done' in s.changes[0].tasks[0], 'las tareas llevan texto y estado');
   assert.equal(s.changes[0].tasks[0].n, '1.1'); assert.match(s.changes[0].tasks[0].section, /Implementacion/);
   assert.ok(s.metrics.activity.some((d) => d.date === '2026-09-10' && d.archived === 1), 'la actividad por dia registra el archive');
