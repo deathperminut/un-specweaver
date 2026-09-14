@@ -206,3 +206,16 @@ test('close desde el CLI: sin ids lista; doctor avisa mientras haya terminadas s
   assert.match(doc, /1 story\/ies con todas las tareas completas SIN archivar/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('bridge y close regeneran el dashboard si ya existe; si no existe, no lo inventan', () => {
+  const dir = midProject();
+  let out = execFileSync('node', [BRIDGE, '--force'], { cwd: dir, stdio: 'pipe' }).toString();
+  assert.doesNotMatch(out, /Dashboard actualizado/);
+  execFileSync('node', [CLI, 'status', '--html'], { cwd: dir, stdio: 'pipe' });
+  const f = path.join(dir, '.un-specweaver', 'dashboard.html');
+  fs.writeFileSync(f, 'viejo');
+  out = execFileSync('node', [BRIDGE, '--force'], { cwd: dir, stdio: 'pipe' }).toString();
+  assert.match(out, /Dashboard actualizado/);
+  assert.ok(fs.readFileSync(f, 'utf8').length > 1000, 'regenerado');
+  fs.rmSync(dir, { recursive: true, force: true });
+});

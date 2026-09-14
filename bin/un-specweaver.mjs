@@ -173,6 +173,7 @@ switch (cmd) {
       else console.error(`  falla  ${r.id}  en ${r.step}:\n${r.out.split('\n').map((l) => '         ' + l).join('\n')}`);
     }
     const failed = results.filter((r) => !r.ok);
+    if (!o.dryRun && results.length - failed.length) { const { refreshDashboard } = await import('../src/status/collect.mjs'); if (await refreshDashboard(root)) console.log('  dashboard actualizado'); }
     console.log(`\n${results.length - failed.length} cerrado(s), ${failed.length} con fallas.${failed.length ? ' Un change que no valida no se archiva: corrige el epics.md y regenera con `bridge --only N.M --force`.' : ''}\n`);
     process.exit(failed.length ? 1 : 0);
   }

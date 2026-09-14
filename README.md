@@ -360,7 +360,9 @@ requisitos con cobertura e inestabilidad, las decisiones por tipo, y un historia
 memlogs, corridas del puente y archives. `--html` escribe un archivo **autocontenido** —CSS y JS
 inline, sin CDN ni servidor— que se abre offline, en CI, o lo abre un compañero sin instalar nada.
 Es una vista: **no guarda nada** y se regenera cada vez, asi que va al `.gitignore`. Si algo se ve
-mal ahi, esta mal en la fuente.
+mal ahi, esta mal en la fuente. Se mantiene solo: `bridge` y `close` lo regeneran al terminar, e
+`init` deja un hook de post-commit que lo rehace con cada commit — una vista que solo se actualiza
+cuando alguien se acuerda es una vista vieja.
 
 `close` existe porque el cierre dependia de la memoria del agente. `/sw:build` decia "archiva
 cuando este entregado" y en un proyecto real quedaron 22 stories terminadas y **cero archivadas**:
@@ -424,7 +426,7 @@ seria mentir.
 |---|---|
 | `bmad`, `bmad-prune`, `openspec`, `layer` | planear (`/sw:new`, `/sw:adopt`) |
 | `gentle-bin`, `gentle-config`, `engram-scope`, `graphify-bin`, `graphify` | **solo** `/sw:build` — planear funciona sin ellos |
-| `gitignore` | nada; es higiene del repo |
+| `gitignore`, `dashboard-hook` | nada; higiene del repo y frescura del dashboard |
 
 Sin esa distincion un agente se detiene por Gentle-AI antes siquiera de levantar requerimientos,
 que es exactamente lo que pasaba antes.
@@ -580,7 +582,7 @@ Una sola duena por dato:
 ## Desarrollo
 
 ```bash
-npm test                    # 146 tests
+npm test                    # 149 tests
 npm pack                    # ~23 kB
 node bin/un-specweaver.mjs init --dry-run
 ```

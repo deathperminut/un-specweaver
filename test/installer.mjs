@@ -55,11 +55,11 @@ test('el plan de un proyecto vacio incluye todos los pasos en orden', () => {
   const plan = buildPlan(ctxFor(root));
   // gitignore va primero: si un paso posterior falla, el vendor a medio instalar
   // no puede terminar commiteado por accidente.
-  assert.deepEqual(plan.map((s) => s.id), ['gitignore', 'bmad', 'bmad-prune', 'openspec', 'gentle-bin', 'gentle-config', 'engram-scope', 'graphify-bin', 'graphify', 'surface', 'layer']);
+  assert.deepEqual(plan.map((s) => s.id), ['gitignore', 'bmad', 'bmad-prune', 'openspec', 'gentle-bin', 'gentle-config', 'engram-scope', 'graphify-bin', 'graphify', 'dashboard-hook', 'surface', 'layer']);
   // gitignore depende de si hay repo git; gentle-bin depende del PATH de la maquina,
   // no del proyecto. El resto si tiene que estar pendiente en un directorio vacio.
   // graphify-bin tambien depende del PATH.
-  const projectScoped = plan.filter((s) => !['gitignore', 'gentle-bin', 'engram-scope', 'graphify-bin'].includes(s.id));
+  const projectScoped = plan.filter((s) => !['gitignore', 'gentle-bin', 'engram-scope', 'graphify-bin', 'dashboard-hook'].includes(s.id));
   assert.ok(projectScoped.every((s) => s.status.state === 'pending'), 'nada del proyecto puede estar "ok" en un directorio vacio');
   fs.rmSync(root, { recursive: true, force: true });
 });
@@ -1148,4 +1148,23 @@ test('solo se declaran soportados los agentes probados de punta a punta', () => 
     for (const v of ['bmad', 'openspec', 'gentle'])
       assert.ok(cfg.ids?.[v], `${id}: falta el id para ${v}`);
   }
+});
+
+test('el hook del dashboard se agrega al post-commit sin pisar lo que ya habia, y es idempotente', async () => {
+  const root = tmp();
+  execFileSync('git', ['-C', root, 'init', '-q']);
+  const step = STEPS.find((s) => s.id === 'dashboard-hook');
+  const hook = path.join(root, '.git', 'hooks', 'post-commit');
+  fs.mkdirSync(path.dirname(hook), { recursive: true });
+  fs.writeFileSync(hook, '#!/bin/sh\ngraphify update . # de graphify\n');
+  assert.equal(step.status(ctxFor(root)).state, 'pending');
+  const [w] = step.plan(ctxFor(root));
+  await runAction(w, { root, lang: 'es' });
+  const c = fs.readFileSync(hook, 'utf8');
+  assert.match(c, /graphify update \./, 'lo de graphify sigue');
+  assert.match(c, /un-specweaver status --html/);
+  assert.ok(fs.statSync(hook).mode & 0o111, 'ejecutable');
+  assert.equal(step.status(ctxFor(root)).state, 'ok');
+  assert.equal(step.plan(ctxFor(root))[0].content.split('un-specweaver: dashboard').length - 1, 1, 'no se duplica');
+  fs.rmSync(root, { recursive: true, force: true });
 });

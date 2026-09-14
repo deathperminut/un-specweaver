@@ -378,3 +378,14 @@ export function collectStatus(root) {
     engram: { available: e.available, project: e.project },
   };
 }
+
+// Regenera el dashboard si ya existe: lo llaman bridge y close al terminar, porque son los
+// comandos que cambian el estado del proyecto. Si nadie lo genero nunca, no se inventa.
+export async function refreshDashboard(root) {
+  const out = path.join(root, '.un-specweaver', 'dashboard.html');
+  if (!exists(out)) return false;
+  const { renderHtml } = await import('./render.mjs');
+  const model = collectStatus(root);
+  fs.writeFileSync(out, renderHtml(model, model.project.lang), 'utf8');
+  return true;
+}
