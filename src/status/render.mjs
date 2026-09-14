@@ -121,7 +121,7 @@ const UI = {
     storiesOf: 'Stories del epic', goal: 'Objetivo', map: 'Mapa del codigo', nodes: 'nodos', edges: 'aristas', engram: 'Memoria', bound: 'atada a', unbound: 'sin atar', absent: 'no instalada',
     generated: 'generado', regen: 'Regenerar: npx un-specweaver status --open', source: 'fuente', empty: 'Nada todavia. Este proyecto no ha pasado por /sw:new.',
     gloss: [
-      ['FR', 'Requisito funcional: algo que el producto hace. Numerado en el PRD; todo lo demas se rastrea hasta uno.'],
+      ['FR', 'Requisito funcional: algo que el producto hace. Es lo que se construye y lo que miden los anillos. El PRD tambien numera NFR y UX-DR, que restringen como se hace.'],
       ['NFR', 'Requisito no funcional: rendimiento, seguridad, accesibilidad. Restringe como se hace.'],
       ['UX-DR', 'Requisito de diseño de experiencia: sale del diseño UX y se mapea a stories.'],
       ['AD', 'Decision de arquitectura: tecnica, tomada una vez, vinculante para todas las stories.'],
@@ -168,7 +168,7 @@ const UI = {
     storiesOf: 'Stories in this epic', goal: 'Goal', map: 'Code map', nodes: 'nodes', edges: 'edges', engram: 'Memory', bound: 'bound to', unbound: 'not bound', absent: 'not installed',
     generated: 'generated', regen: 'Regenerate: npx un-specweaver status --open', source: 'source', empty: 'Nothing yet. This project has not gone through /sw:new.',
     gloss: [
-      ['FR', 'Functional requirement: something the product does. Numbered in the PRD; everything else traces back to one.'],
+      ['FR', 'Functional requirement: something the product does. It is what gets built and what the rings measure. The PRD also numbers NFR and UX-DR, which constrain how.'],
       ['NFR', 'Non-functional requirement: performance, security, accessibility. Constrains how it is done.'],
       ['UX-DR', 'UX design requirement: comes out of the UX design and maps to stories.'],
       ['AD', 'Architecture decision: technical, made once, binding for every story.'],
@@ -447,10 +447,10 @@ function effort(){
       <div class="bars">\${seg('decisions','var(--acc)',d.decisions,T.dec)}\${seg('changes','var(--warn)',d.changes,T.chg)}\${seg('overrides','var(--crit)',d.overrides,T.ovr)}\${seg('assumptions','var(--vio)',d.assumptions,T.asm)}\${other?\`<i style="width:\${w(other)};background:var(--line2)" data-canvas="stage:\${k}:all" title="\${other}"></i>\`:''}</div>
       <span class="n">\${d.decisions} \${T.dec} · \${d.changes} \${T.chg}\${d.overrides?\` · \${d.overrides} \${T.ovr}\`:''}\${d.assumptions?\` · \${d.assumptions} \${T.asm}\`:''}</span>
       <span class="docs">\${docs.map((x,i) => \`<span class="tag \${x.memlog?'vio':'acc'}" data-canvas="doc:\${k}:\${i}">\${esc(x.memlog?'memlog':x.name)}</span>\`).join('')}</span></div>\`; }).join('');
-  const f = (v,l,k) => \`<div class="fstep" \${k?\`data-canvas="\${k}" style="cursor:pointer"\`:''}><div class="v">\${v}</div><div class="l">\${l}</div></div>\`;
+  const f = (v,l,k,sub) => \`<div class="fstep" \${k?\`data-canvas="\${k}" style="cursor:pointer"\`:''}><div class="v">\${v}</div><div class="l">\${l}</div>\${sub?\`<div class="l" style="font-size:11px;color:var(--dim);margin-top:2px">\${sub}</div>\`:''}</div>\`;
   return \`<section><h2>\${T.effort}</h2><p class="hint">\${T.effortHint}</p><div class="effort">
     <div class="card">\${rows || \`<div class="empty">\${T.noHistory}</div>\`}<div class="legend"><span><i style="background:var(--acc)"></i>\${T.dec}</span><span><i style="background:var(--warn)"></i>\${T.chg}</span><span><i style="background:var(--crit)"></i>\${T.ovr}</span><span><i style="background:var(--vio)"></i>\${T.asm}</span><span><i style="background:var(--line2)"></i>\${T.stOther}</span></div></div>
-    <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel">\${f(m.requirements.total, T.req, 'fr')}\${f(m.epics, T.epics)}\${f(m.stories, T.stories, 'stories')}\${f(m.scenarios, T.criteria)}\${f(m.changes.total, T.specs, 'specs')}\${f(m.tasks.total, T.tasksN, 'tasks')}</div></div>
+    <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel">\${f(m.requirements.fr, 'FR', 'fr', \`\${m.requirements.nfr} NFR · \${m.requirements.ux} UX-DR\${m.requirements.removed?\` · \${m.requirements.removed} \${T.frRemoved}\`:''}\`)}\${f(m.epics, T.epics, null, \`\${m.stories&&m.epics?Math.round(m.stories/m.epics):0} \${T.stories} c/u\`)}\${f(m.stories, T.stories, 'stories')}\${f(m.changes.total, T.specs, 'specs')}\${f(m.tasks.total, T.tasksN, 'tasks')}</div></div>
   </div></section>\`;
 }
 
