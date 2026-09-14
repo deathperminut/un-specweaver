@@ -207,10 +207,34 @@ export function epicsTree(root, doc = readPlanning(root)) {
 // hitos, git marca cada dia con manos en el codigo. Sin repo, no hay commits y no pasa nada.
 export function commitsByDay(root) {
   const out = new Map();
+  for (const [d, subject] of commitLog(root)) out.set(d, (out.get(d) || 0) + 1);
+  return out;
+}
+
+export function commitLog(root) {
   try {
-    const log = execFileSync('git', ['-C', root, 'log', '--date=short', '--format=%ad'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
-    for (const d of log.split('\n')) if (d) out.set(d, (out.get(d) || 0) + 1);
-  } catch { /* sin git */ }
+    const log = execFileSync('git', ['-C', root, 'log', '--date=short', '--format=%ad%x09%s'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString();
+    return log.split('\n').filter(Boolean).map((l) => { const i = l.indexOf('\t'); return [l.slice(0, i), l.slice(i + 1)]; });
+  } catch { return []; }
+}
+
+// Que paso cada dia, con detalle: es lo que se abre al hacer click en una fecha del calendario.
+export function activityDetail({ artifacts, decisions, ledger, changes, commits }) {
+  const days = {};
+  const day = (d) => (days[d] = days[d] || { commits: [], decisions: [], changes: [], bridge: [], archived: [], artifacts: [] });
+  for (const [d, subject] of commits) day(d).commits.push(subject);
+  for (const a of artifacts) { const d = dateIn(a.file); if (d && a.kind !== 'decisions') day(d).artifacts.push({ kind: a.kind, file: path.basename(a.file) }); }
+  for (const e of decisions.entries) if (e.date) (e.type === 'change' || e.type === 'override' || e.kind === 'change-proposal' ? day(e.date).changes : day(e.date).decisions).push({ kind: e.kind, type: e.type, text: e.text, refs: e.refs });
+  for (const run of ledger) day(run.at.slice(0, 10)).bridge.push({ options: run.options, changes: (run.changes || []).map((c) => `${c.changeId}${c.action === 'skipped' ? ' (omitido)' : ''}`) });
+  for (const c of changes) if (c.archivedAt) day(c.archivedAt).archived.push({ id: c.id, story: c.story, title: c.title });
+  return days;
+}
+
+// Los documentos de planeacion, con su texto: el dashboard los muestra, no solo los nombra.
+export function documents(root, artifacts, decisionSources) {
+  const out = [];
+  for (const a of artifacts) if (a.kind !== 'decisions' && a.kind !== 'epics') out.push({ kind: a.kind, name: path.basename(a.file), file: path.relative(root, a.file), text: readText(a.file), memlog: false });
+  for (const d of decisionSources) if (d.format === 'memlog') out.push({ kind: d.kind, name: `${d.artifact} · memlog`, file: path.relative(root, d.file), text: readText(d.file), memlog: true });
   return out;
 }
 
@@ -327,6 +351,7 @@ export function collectStatus(root) {
   const sprint = sprintStatus(root, changes);
   const ledger = readLedger(root);
   const tl = timeline(root, pr, changes);
+  const commits = commitLog(root);
   // Historia por requisito, para el detalle al hacer click. Solo los que tienen algo que contar.
   const history = {};
   for (const r of requirements.rows) if (r.mentions > 0) history[r.id] = requirementHistory(root, pr, r.id, trace).events;
@@ -336,12 +361,14 @@ export function collectStatus(root) {
     project: { name: doc?.projectName || trace?.project || path.basename(root), root, lang: state?.preferences?.lang || state?.lang || 'es', agents: state?.agents || [], installedAt: state?.installedAt || null, vendors: state?.vendors || null },
     phases: phases(root, artifacts, trace, changes),
     metrics: metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline: tl, sprint, commits: commitsByDay(root) }),
+    activityDetail: activityDetail({ artifacts, decisions, ledger, changes, commits }),
+    documents: documents(root, artifacts, decisions.sources),
     epics,
     requirements,
     history,
     changes,
     sprint,
-    decisions: { total: decisions.entries.length, sources: decisions.sources.length, byType, ranking: instabilityRanking(root, pr, trace).slice(0, 10), key: keyDecisions(decisions) },
+    decisions: { total: decisions.entries.length, sources: decisions.sources.length, byType, ranking: instabilityRanking(root, pr, trace).slice(0, 10), key: keyDecisions(decisions), all: decisions.entries.map((e) => ({ kind: e.kind, artifact: e.artifact, type: e.type, text: e.text, refs: e.refs, date: e.date })) },
     impacts: impacts(decisions, trace, ledger),
     timeline: tl,
     graph: { available: !!g.bin, path: g.graph, html: exists(path.join(root, VENDORS.graphify.outDir, 'graph.html')) ? path.join(VENDORS.graphify.outDir, 'graph.html') : null, nodes: graph?.nodes?.length ?? null, edges: graph?.edges?.length ?? null },

@@ -89,6 +89,7 @@ const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 // Textos de la app (cliente). Se embeben junto con el modelo; el HTML no depende de nada externo.
 const UI = {
   es: {
+    docs: 'documentos', viewDoc: 'ver', dayTitle: 'Que paso el', stageOf: 'Etapa', allEntries: 'todas', bars: 'click en una barra para ver las entradas',
     chain: 'Del requisito a la tarea', chainHint: 'click en un anillo para ver que esta completo y que no',
     frDone: 'FR completados', frDoneHint: 'todas sus stories terminadas', specsDone: 'specs cerradas', tasksDone: 'tareas hechas', storiesDoneShort: 'stories terminadas',
     alertUnstable: 'requisitos inestables', alertHint: 'han cambiado 2 o mas veces despues de nacer — click para ver cuales y por que',
@@ -104,7 +105,7 @@ const UI = {
     archived: 'specs archivadas', unclosed: 'terminadas sin cerrar', wave: 'ola actual', ready: 'listas para empezar', revisions: 'revisiones', decisions: 'decisiones registradas',
     days: 'dias de trabajo', unstable: 'requisitos inestables', of: 'de', phases: 'Fases del metodo',
     phase: { understand: 'Entender', decide: 'Decidir', decompose: 'Descomponer', translate: 'Traducir', build: 'Construir', close: 'Cerrar' },
-    effort: 'Esfuerzo por etapa', effortHint: 'lo que el metodo deja escrito: decisiones, cambios, supuestos, artefactos. No horas.',
+    effort: 'Esfuerzo por etapa', effortHint: 'lo que el metodo deja escrito: decisiones, cambios, supuestos, artefactos. No horas. Click en una barra abre sus entradas; en un documento, el documento.',
     kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Arquitectura', 'ux-designs': 'UX', 'change-proposal': 'Cambios de alcance' },
     entries: 'entradas', dec: 'decisiones', chg: 'cambios', ovr: 'descartes', asm: 'supuestos',
     funnel: 'Descomposicion', funnelHint: 'del PRD al codigo', req: 'requisitos', epics: 'epics', stories: 'stories', criteria: 'criterios', tasksN: 'tareas', specs: 'specs',
@@ -135,6 +136,7 @@ const UI = {
     ],
   },
   en: {
+    docs: 'documents', viewDoc: 'view', dayTitle: 'What happened on', stageOf: 'Stage', allEntries: 'all', bars: 'click a bar to see the entries',
     chain: 'From requirement to task', chainHint: 'click a ring to see what is complete and what is not',
     frDone: 'FR completed', frDoneHint: 'all their stories finished', specsDone: 'specs closed', tasksDone: 'tasks done', storiesDoneShort: 'stories finished',
     alertUnstable: 'unstable requirements', alertHint: 'changed 2 or more times after birth — click to see which and why',
@@ -150,7 +152,7 @@ const UI = {
     archived: 'specs archived', unclosed: 'finished but not closed', wave: 'current wave', ready: 'ready to start', revisions: 'revisions', decisions: 'decisions recorded',
     days: 'working days', unstable: 'unstable requirements', of: 'of', phases: 'Method phases',
     phase: { understand: 'Understand', decide: 'Decide', decompose: 'Decompose', translate: 'Translate', build: 'Build', close: 'Close' },
-    effort: 'Effort per stage', effortHint: 'what the method leaves written: decisions, changes, assumptions, artifacts. Not hours.',
+    effort: 'Effort per stage', effortHint: 'what the method leaves written: decisions, changes, assumptions, artifacts. Not hours. Click a bar to open its entries; a document, the document.',
     kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Architecture', 'ux-designs': 'UX', 'change-proposal': 'Scope changes' },
     entries: 'entries', dec: 'decisions', chg: 'changes', ovr: 'discards', asm: 'assumptions',
     funnel: 'Decomposition', funnelHint: 'from PRD to code', req: 'requirements', epics: 'epics', stories: 'stories', criteria: 'criteria', tasksN: 'tasks', specs: 'specs',
@@ -212,7 +214,13 @@ details.gloss summary::before{content:'▸';color:var(--acc)}details.gloss[open]
 .stepper{display:flex;align-items:center;gap:0;margin-top:14px;overflow-x:auto;padding:4px 0}.step{display:flex;align-items:center;gap:8px;white-space:nowrap}.step .c{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;font-size:11px;color:var(--muted);flex:none}
 .step.done .c{background:var(--good-soft);border-color:var(--good);color:var(--good)}.step.partial .c{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}.step .t{font-size:12.5px}.step.done .t{color:var(--fg)}.step .t{color:var(--muted)}
 .step .ln{width:46px;height:2px;background:var(--line2);margin:0 8px;flex:none}.step.done .ln{background:var(--good)}
-.effort{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:860px){.effort,.hero{grid-template-columns:1fr}}
+.effort{display:grid;grid-template-columns:1fr;gap:14px}@media(max-width:860px){.hero{grid-template-columns:1fr}}
+.erow{grid-template-columns:130px 1fr auto auto!important}.erow .bars i{cursor:pointer;transition:filter .15s}.erow .bars i:hover{filter:brightness(1.3)}.erow .docs{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.erow .docs .tag{cursor:pointer}.erow .docs .tag:hover{border-color:var(--acc);color:var(--acc)}
+.doc{max-width:900px;margin:0 auto;font-size:14px;line-height:1.65}.doc h1{font-size:22px;margin:22px 0 10px}.doc h2{font-size:18px;margin:26px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}.doc h3{font-size:15px;margin:20px 0 6px}.doc h4{font-size:13px;margin:16px 0 4px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.doc p{margin:8px 0}.doc ul,.doc ol{margin:6px 0 6px 22px;padding:0}.doc li{margin:3px 0}.doc code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc);font-size:12.5px}.doc pre{background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font-size:12.5px}.doc pre code{background:none;border:0;padding:0;color:var(--fg)}
+.doc table{border-collapse:collapse;margin:10px 0;width:100%}.doc th,.doc td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top;font-size:13px}.doc th{background:var(--card2);color:var(--muted)}.doc blockquote{margin:8px 0;padding:6px 14px;border-left:3px solid var(--line2);color:var(--muted)}.doc hr{border:0;border-top:1px solid var(--line);margin:18px 0}.doc s{color:var(--dim)}
+.doc .memlog{list-style:none;padding:0;margin:0}.doc .memlog li{padding:8px 0;border-bottom:1px dashed var(--line);display:grid;grid-template-columns:96px 1fr;gap:10px}.doc .memlog li .tag{align-self:start}
+.daylist{max-width:1000px;margin:0 auto}.daylist h4{margin:18px 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}.daylist .dc{margin-bottom:8px}
 .erow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.erow:last-child{border:0}.erow .k{color:var(--muted);font-size:12.5px}.erow .bars{display:flex;gap:2px;height:10px}.erow .bars i{display:block;height:100%;border-radius:2px}
 .erow .n{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .funnel{display:flex;align-items:stretch;gap:0;overflow-x:auto}.fstep{flex:1;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;position:relative}.fstep+.fstep{margin-left:22px}.fstep+.fstep::before{content:'→';position:absolute;left:-19px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px}
@@ -252,7 +260,7 @@ details.it .body code{background:var(--card2);border:1px solid var(--line);paddi
 .expl{background:var(--card2);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--fg)}
 .cal{display:flex;flex-wrap:wrap;gap:14px}.mon{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px}.mon h5{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--fg);letter-spacing:.3px;display:flex;justify-content:space-between;gap:10px}.mon h5 small{color:var(--muted);font-weight:400;font-family:var(--mono)}
 .mon .dh,.mon .dg{display:grid;grid-template-columns:repeat(7,24px);gap:3px}.mon .dh span{font-size:9.5px;color:var(--dim);text-align:center;font-family:var(--mono)}.mon .dg{margin-top:3px}
-.mon i{width:24px;height:24px;border-radius:5px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font:10.5px var(--mono);color:var(--dim);font-style:normal;position:relative}.mon i.l1{background:#134e2c;color:#c7f0d4;border-color:#134e2c}.mon i.l2{background:#1e7a3f;color:#e6fbec;border-color:#1e7a3f}.mon i.l3{background:#2ea653;color:#0b1f12;border-color:#2ea653}.mon i.l4{background:#4ade80;color:#0b1f12;border-color:#4ade80}
+.mon i{cursor:pointer;width:24px;height:24px;border-radius:5px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font:10.5px var(--mono);color:var(--dim);font-style:normal;position:relative}.mon i.l1{background:#134e2c;color:#c7f0d4;border-color:#134e2c}.mon i.l2{background:#1e7a3f;color:#e6fbec;border-color:#1e7a3f}.mon i.l3{background:#2ea653;color:#0b1f12;border-color:#2ea653}.mon i.l4{background:#4ade80;color:#0b1f12;border-color:#4ade80}
 .mon i.today{outline:1.5px solid var(--acc);outline-offset:1px}.mon i.off{background:transparent;border-color:transparent}.mon i.future{opacity:.35}
 .mon i[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:30px;transform:translateX(-50%);white-space:pre;background:#0b1020;border:1px solid var(--line2);color:var(--fg);font:11px/1.5 var(--sans);padding:6px 9px;border-radius:6px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left}
 .hmleg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);justify-content:flex-end;margin-top:10px}.hmleg i{width:11px;height:11px;border-radius:2px;display:inline-block;background:var(--card)}.hmleg i.l1{background:#134e2c}.hmleg i.l2{background:#1e7a3f}.hmleg i.l3{background:#2ea653}.hmleg i.l4{background:#4ade80}
@@ -312,8 +320,7 @@ function hero(){
     \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
   </div>\`;
   const alert = rq.unstable ? \`<div class="alert" data-canvas="unstable"><b>\${rq.unstable}</b><div class="t">\${T.alertUnstable}<br><small>\${T.alertHint}</small></div><span class="tag warn">→</span></div>\` : \`<div class="alert ok"><b>✓</b><div class="t">\${T.alertNone}</div></div>\`;
-  const wave = \`<div class="alert ok" style="cursor:default;background:var(--acc-soft);border-color:rgba(56,189,248,.35)"><b style="color:var(--acc)">\${sp&&sp.current?sp.current:'—'}<small style="font-size:12px;color:var(--muted)">\${sp?\` / \${sp.waves.length}\`:''}</small></b><div class="t">\${T.wave}<br><small>\${sp?\`\${sp.totals.ready} \${T.ready} · \${sp.totals.archived} \${T.of} \${sp.totals.stories} \${T.stories} \${T.state.archived}\`:T.noSprint}</small></div></div>\`;
-  return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="hero2">\${wave}\${alert}</div>
+  return \`<section><h2>\${T.how}</h2><p class="hint">\${T.chainHint}</p>\${chain}\${alert}
   <div class="stepper">\${M.phases.map((p,i) => \`<div class="step \${p.done?'done':p.partial?'partial':''}"><span class="c">\${p.done?'✓':p.n}</span><span class="t">\${esc(T.phase[p.key])}</span>\${i<M.phases.length-1?'<span class="ln"></span>':''}</div>\`).join('')}</div></section>\`;
 }
 
@@ -355,12 +362,42 @@ function canvasData(k){
   }
 }
 function openCanvas(k){
-  const d = canvasData(k); if (!d) return; const c = $('#canvas');
+  const c = $('#canvas');
   const list = (arr) => arr.length ? arr.map(i => \`<details class="it"><summary>\${i.head}<span class="sp" style="flex:1"></span>\${i.tags}</summary><div class="body">\${i.body}</div></details>\`).join('') : \`<div class="empty">—</div>\`;
-  c.innerHTML = \`<div class="ch"><h3>\${esc(d.title)}</h3><span class="sp"></span><button class="x" data-close-canvas>\${T.close} (Esc)</button></div>
-    \${d.single ? '' : \`<div class="tabs"><div class="tab on" data-tab="done">\${T.tabDone}<b>\${d.done.length}</b></div><div class="tab" data-tab="pending">\${T.tabPending}<b>\${d.pending.length}</b></div></div>\`}
-    <div class="cb">\${d.expl?\`<div class="expl">\${esc(d.expl)}</div>\`:''}\${d.single ? \`<div class="pane on">\${list(d.pending)}</div>\` : \`<div class="pane on" data-pane="done">\${list(d.done)}</div><div class="pane" data-pane="pending">\${list(d.pending)}\${d.removed&&d.removed.length?\`<div class="grp"><h4>\${T.frRemoved} (\${d.removed.length})</h4>\${list(d.removed)}</div>\`:''}</div>\`}</div>\`;
-  c.classList.add('open'); document.body.style.overflow = 'hidden';
+  let title, expl = '', tabs;
+  const [kind, ...rest] = k.split(':');
+  if (kind === 'day') {
+    const date = rest[0]; const a = M.activityDetail[date] || {}; title = \`\${T.dayTitle} \${date}\`;
+    const ent = (arr) => arr.map(e => \`<div class="dc \${e.type==='override'?'override':'constraint'}"><div class="h"><span class="tag \${e.type==='override'?'crit':e.type==='change'?'warn':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.kind]||e.kind)}</span></div><p>\${md(e.text)}</p>\${e.refs?.length?\`<div class="refs">\${e.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('');
+    const parts = [];
+    if (a.commits?.length) parts.push(\`<h4>\${a.commits.length} \${T.dayCommits}</h4>\${a.commits.map(c => \`<div class="dc"><p><code>git</code> \${esc(c)}</p></div>\`).join('')}\`);
+    if (a.artifacts?.length) parts.push(\`<h4>\${T.dayArt}</h4>\${a.artifacts.map(x => \`<div class="dc"><p><span class="tag acc">\${esc(T.kind[x.kind]||x.kind)}</span> \${esc(x.file)}</p></div>\`).join('')}\`);
+    if (a.decisions?.length) parts.push(\`<h4>\${a.decisions.length} \${T.dayDec}</h4>\${ent(a.decisions)}\`);
+    if (a.changes?.length) parts.push(\`<h4>\${a.changes.length} \${T.dayChg}</h4>\${ent(a.changes)}\`);
+    if (a.bridge?.length) parts.push(\`<h4>\${T.dayBridge}</h4>\${a.bridge.map(b => \`<div class="dc"><p><code>bridge</code> \${b.options?.only?.length?\`--only \${b.options.only.join(', ')}\`:''} \${b.options?.force?'--force':''}</p><div class="refs">\${b.changes.map(x => \`<span class="tag">\${esc(x)}</span>\`).join('')}</div></div>\`).join('')}\`);
+    if (a.archived?.length) parts.push(\`<h4>\${a.archived.length} \${T.dayArch}</h4>\${a.archived.map(x => \`<div class="dc"><p><span class="tag acc chip" data-open="story:\${esc(x.story||'')}">Story \${esc(x.story||'')}</span> \${esc(x.title)} <code>\${esc(x.id)}</code></p></div>\`).join('')}\`);
+    tabs = [{ key: 'day', label: date, html: \`<div class="daylist">\${parts.join('') || \`<div class="empty">\${T.noActivity}</div>\`}</div>\` }];
+  } else if (kind === 'stage') {
+    const [stage, type] = rest; const typeMap = { decisions: ['decision'], changes: ['change'], overrides: ['override'], assumptions: ['assumption'] };
+    title = \`\${T.stageOf}: \${T.kind[stage]||stage}\`;
+    const all = M.decisions.all.filter(e => e.kind === stage);
+    const mk = (arr) => arr.length ? arr.map(e => \`<div class="dc \${e.type}"><div class="h"><span class="tag \${e.type==='override'?'crit':e.type==='change'?'warn':e.type==='decision'?'acc':e.type==='assumption'||e.type==='question'?'vio':'dim'}">\${esc(T.type[e.type]||e.type)}</span>\${e.date?\`<time>\${esc(e.date)}</time>\`:''}</div><p>\${md(e.text)}</p>\${e.refs?.length?\`<div class="refs">\${e.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('') : \`<div class="empty">—</div>\`;
+    const groups = [['decisions', T.dec], ['changes', T.chg], ['overrides', T.ovr], ['assumptions', T.asm], ['all', T.allEntries]];
+    tabs = groups.map(([g, l]) => { const arr = g === 'all' ? all : all.filter(e => (stage === 'change-proposal' && g === 'changes') || typeMap[g].includes(e.type)); return { key: g, label: l, count: arr.length, html: \`<div class="cards">\${mk(arr)}</div>\`, on: g === type }; }).filter(t => t.count || t.key === 'all');
+    if (!tabs.some(t => t.on)) tabs[0].on = true;
+  } else if (kind === 'doc') {
+    const [stage, idx] = rest; const docs = M.documents.filter(x => x.kind === stage); title = \`\${T.kind[stage]||stage} — \${T.docs}\`;
+    tabs = docs.map((x, i) => ({ key: 'd'+i, label: x.memlog ? 'memlog' : x.name, html: \`<div class="doc">\${x.memlog ? memlogBlock(x.text) : mdBlock(x.text)}</div>\`, on: String(i) === idx }));
+  } else {
+    const d = canvasData(k); if (!d) return; title = d.title; expl = d.expl || '';
+    tabs = d.single ? [{ key: 'one', label: title, html: list(d.pending) }]
+      : [{ key: 'done', label: T.tabDone, count: d.done.length, html: list(d.done), on: true }, { key: 'pending', label: T.tabPending, count: d.pending.length, html: list(d.pending) + (d.removed && d.removed.length ? \`<div class="grp"><h4>\${T.frRemoved} (\${d.removed.length})</h4>\${list(d.removed)}</div>\` : '') }];
+  }
+  if (!tabs.some(t => t.on)) tabs[0].on = true;
+  c.innerHTML = \`<div class="ch"><h3>\${esc(title)}</h3><span class="sp"></span><button class="x" data-close-canvas>\${T.close} (Esc)</button></div>
+    \${tabs.length > 1 ? \`<div class="tabs">\${tabs.map(t => \`<div class="tab \${t.on?'on':''}" data-tab="\${t.key}">\${esc(t.label)}\${t.count!=null?\`<b>\${t.count}</b>\`:''}</div>\`).join('')}</div>\` : ''}
+    <div class="cb">\${expl?\`<div class="expl">\${esc(expl)}</div>\`:''}\${tabs.map(t => \`<div class="pane \${t.on?'on':''}" data-pane="\${t.key}">\${t.html}</div>\`).join('')}</div>\`;
+  c.classList.add('open'); c.querySelector('.cb').scrollTop = 0; document.body.style.overflow = 'hidden';
 }
 function closeCanvas(){ $('#canvas').classList.remove('open'); document.body.style.overflow = ''; }
 
@@ -388,7 +425,7 @@ function workSec(){
     let active = 0, sum = 0; const cells = [];
     for (let k = 0; k < lead; k++) cells.push('<i class="off"></i>');
     for (let d = 1; d <= n; d++) { const dt = new Date(Date.UTC(y, mo, d)); const id = iso(dt); const a = by.get(id); if (a) { active++; sum += total(a); }
-      cells.push(\`<i class="l\${a?lvl(total(a)):0} \${id===todayIso?'today':''} \${dt>today?'future':''}" data-tip="\${esc(tip(id))}">\${d}</i>\`); }
+      cells.push(\`<i class="l\${a?lvl(total(a)):0} \${id===todayIso?'today':''} \${dt>today?'future':''}" data-tip="\${esc(tip(id))}" \${a?\`data-canvas="day:\${id}"\`:''}>\${d}</i>\`); }
     return \`<div class="mon"><h5><span>\${T.months[mo]} \${y}</span><small>\${active} \${T.activeDays}</small></h5><div class="dh">\${T.dow.map(d => \`<span>\${d[0]}</span>\`).join('')}</div><div class="dg">\${cells.join('')}</div></div>\`;
   }).join('');
   const sum = { commits: 0, decisions: 0, changes: 0, archived: 0 }; for (const d of days) { sum.commits += d.commits; sum.decisions += d.decisions; sum.changes += d.changes; sum.archived += d.archived; }
@@ -399,16 +436,53 @@ function workSec(){
 }
 
 // ---- esfuerzo ----------------------------------------------------------------
+const STAGE_TYPES = [['decisions','decision','var(--acc)'], ['changes','change','var(--warn)'], ['overrides','override','var(--crit)'], ['assumptions','assumption','var(--vio)']];
 function effort(){
   const kinds = ['briefs','prds','architecture','ux-designs','change-proposal'].filter(k => m.decisions.byKind[k]);
   const max = Math.max(1, ...kinds.map(k => m.decisions.byKind[k].entries));
   const rows = kinds.map(k => { const d = m.decisions.byKind[k]; const other = d.entries - d.decisions - d.changes - d.overrides - d.assumptions; const w = (n) => (n/max*100).toFixed(1)+'%';
-    return \`<div class="erow"><span class="k">\${esc(T.kind[k]||k)}\${m.dates.phases[k]?\`<br><span class="mono" style="color:var(--dim)">\${m.dates.phases[k]}</span>\`:''}</span><div class="bars" title="\${d.entries} \${T.entries}"><i style="width:\${w(d.decisions)};background:var(--acc)"></i><i style="width:\${w(d.changes)};background:var(--warn)"></i><i style="width:\${w(d.overrides)};background:var(--crit)"></i><i style="width:\${w(d.assumptions)};background:var(--vio)"></i><i style="width:\${w(other)};background:var(--line2)"></i></div><span class="n">\${d.decisions} \${T.dec} · \${d.changes} \${T.chg}\${d.overrides?\` · \${d.overrides} \${T.ovr}\`:''}\${d.assumptions?\` · \${d.assumptions} \${T.asm}\`:''}</span></div>\`; }).join('');
-  const f = (v,l) => \`<div class="fstep"><div class="v">\${v}</div><div class="l">\${l}</div></div>\`;
+    const docs = M.documents.filter(x => x.kind === k);
+    const seg = (key, color, n, label) => n ? \`<i style="width:\${w(n)};background:\${color}" data-canvas="stage:\${k}:\${key}" title="\${n} \${label}"></i>\` : '';
+    return \`<div class="erow"><span class="k">\${esc(T.kind[k]||k)}\${m.dates.phases[k]?\`<br><span class="mono" style="color:var(--dim)">\${m.dates.phases[k]}</span>\`:''}</span>
+      <div class="bars">\${seg('decisions','var(--acc)',d.decisions,T.dec)}\${seg('changes','var(--warn)',d.changes,T.chg)}\${seg('overrides','var(--crit)',d.overrides,T.ovr)}\${seg('assumptions','var(--vio)',d.assumptions,T.asm)}\${other?\`<i style="width:\${w(other)};background:var(--line2)" data-canvas="stage:\${k}:all" title="\${other}"></i>\`:''}</div>
+      <span class="n">\${d.decisions} \${T.dec} · \${d.changes} \${T.chg}\${d.overrides?\` · \${d.overrides} \${T.ovr}\`:''}\${d.assumptions?\` · \${d.assumptions} \${T.asm}\`:''}</span>
+      <span class="docs">\${docs.map((x,i) => \`<span class="tag \${x.memlog?'vio':'acc'}" data-canvas="doc:\${k}:\${i}">\${esc(x.memlog?'memlog':x.name)}</span>\`).join('')}</span></div>\`; }).join('');
+  const f = (v,l,k) => \`<div class="fstep" \${k?\`data-canvas="\${k}" style="cursor:pointer"\`:''}><div class="v">\${v}</div><div class="l">\${l}</div></div>\`;
   return \`<section><h2>\${T.effort}</h2><p class="hint">\${T.effortHint}</p><div class="effort">
-    <div class="card">\${rows || \`<div class="empty">\${T.noHistory}</div>\`}<div class="legend"><span><i style="background:var(--acc)"></i>\${T.dec}</span><span><i style="background:var(--warn)"></i>\${T.chg}</span><span><i style="background:var(--crit)"></i>\${T.ovr}</span><span><i style="background:var(--vio)"></i>\${T.asm}</span></div></div>
-    <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel">\${f(m.requirements.total, T.req)}\${f(m.epics, T.epics)}\${f(m.stories, T.stories)}\${f(m.scenarios, T.criteria)}\${f(m.changes.total, T.specs)}\${f(m.tasks.total, T.tasksN)}</div></div>
+    <div class="card">\${rows || \`<div class="empty">\${T.noHistory}</div>\`}<div class="legend"><span><i style="background:var(--acc)"></i>\${T.dec}</span><span><i style="background:var(--warn)"></i>\${T.chg}</span><span><i style="background:var(--crit)"></i>\${T.ovr}</span><span><i style="background:var(--vio)"></i>\${T.asm}</span><span><i style="background:var(--line2)"></i>\${T.stOther}</span></div></div>
+    <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel">\${f(m.requirements.total, T.req, 'fr')}\${f(m.epics, T.epics)}\${f(m.stories, T.stories, 'stories')}\${f(m.scenarios, T.criteria)}\${f(m.changes.total, T.specs, 'specs')}\${f(m.tasks.total, T.tasksN, 'tasks')}</div></div>
   </div></section>\`;
+}
+
+// ---- markdown minimo para mostrar los documentos de planeacion -------------------------
+function mdBlock(src){
+  const lines = String(src).split('\\n'); const out = []; let i = 0; let list = null; let para = [];
+  const flushP = () => { if (para.length) { out.push(\`<p>\${md(para.join(' '))}</p>\`); para = []; } };
+  const flushL = () => { if (list) { out.push(\`</\${list}>\`); list = null; } };
+  const inline = (t) => md(t).replace(/~~([^~]+)~~/g, '<s>$1</s>');
+  if (lines[0] === '---') { i = 1; while (i < lines.length && lines[i] !== '---') i++; i++; }
+  for (; i < lines.length; i++) {
+    const l = lines[i];
+    if (/^\`\`\`/.test(l)) { flushP(); flushL(); const buf = []; i++; while (i < lines.length && !/^\`\`\`/.test(lines[i])) buf.push(lines[i++]); out.push(\`<pre><code>\${esc(buf.join('\\n'))}</code></pre>\`); continue; }
+    const h = l.match(/^(#{1,4})\\s+(.*)$/); if (h) { flushP(); flushL(); out.push(\`<h\${h[1].length}>\${inline(h[2])}</h\${h[1].length}>\`); continue; }
+    if (/^\\s*[-*]\\s*[-*]\\s*[-*]\\s*$/.test(l) || /^---+$/.test(l)) { flushP(); flushL(); out.push('<hr>'); continue; }
+    if (/^\\|/.test(l)) { flushP(); flushL(); const rows = []; while (i < lines.length && /^\\|/.test(lines[i])) rows.push(lines[i++]); i--;
+      const cells = (r) => r.replace(/^\\||\\|$/g,'').split('|').map(c => c.trim()); const body = rows.filter(r => !/^\\|\\s*:?-+/.test(r));
+      out.push(\`<table>\${body.map((r,ri) => \`<tr>\${cells(r).map(c => \`<\${ri?'td':'th'}>\${inline(c)}</\${ri?'td':'th'}>\`).join('')}</tr>\`).join('')}</table>\`); continue; }
+    const li = l.match(/^\\s*([-*+]|\\d+[.)])\\s+(.*)$/); if (li) { flushP(); const kind = /\\d/.test(li[1]) ? 'ol' : 'ul'; if (list !== kind) { flushL(); out.push(\`<\${kind}>\`); list = kind; } out.push(\`<li>\${inline(li[2])}</li>\`); continue; }
+    const bq = l.match(/^>\\s?(.*)$/); if (bq) { flushP(); flushL(); out.push(\`<blockquote>\${inline(bq[1])}</blockquote>\`); continue; }
+    if (!l.trim()) { flushP(); flushL(); continue; }
+    if (list && /^\\s{2,}/.test(l)) { out[out.length-1] = out[out.length-1].replace(/<\\/li>$/, ' ' + inline(l.trim()) + '</li>'); continue; }
+    flushL(); para.push(l.trim());
+  }
+  flushP(); flushL(); return out.join('\\n');
+}
+function memlogBlock(src){
+  const entries = []; let meta = ''; const lines = String(src).split('\\n'); let i = 0;
+  if (lines[0] === '---') { i = 1; const kv = []; while (i < lines.length && lines[i] !== '---') kv.push(lines[i++]); i++; meta = kv.map(esc).join('<br>'); }
+  let cur = null; for (; i < lines.length; i++) { const e = lines[i].match(/^- \\((\\w[\\w-]*)\\)\\s*(.*)$/); if (e) { cur = { type: e[1].toLowerCase(), text: e[2] }; entries.push(cur); } else if (cur && lines[i].trim()) cur.text += ' ' + lines[i].trim(); }
+  const cls = (t) => t==='override'?'crit':t==='change'?'warn':t==='decision'?'acc':t==='assumption'||t==='question'?'vio':'dim';
+  return \`\${meta?\`<p class="hint mono">\${meta}</p>\`:''}<ul class="memlog">\${entries.map(e => \`<li><span class="tag \${cls(e.type)}">\${esc(T.type[e.type]||e.type)}</span><span>\${md(e.text)}</span></li>\`).join('')}</ul>\`;
 }
 
 // ---- flujo ----------------------------------------------------------------

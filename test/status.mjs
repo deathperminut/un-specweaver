@@ -88,6 +88,9 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.equal(s.changes[0].tasks[0].n, '1.1'); assert.match(s.changes[0].tasks[0].section, /Implementacion/);
   assert.ok(s.metrics.activity.some((d) => d.date === '2026-09-10' && d.archived === 1), 'la actividad por dia registra el archive');
   assert.ok(s.metrics.activity.every((d) => 'commits' in d), 'los commits de git entran en la actividad (0 si no hay repo)');
+  assert.ok(s.activityDetail['2026-09-10'].archived.some((a) => a.story === '2.1'), 'el detalle por dia trae que se archivo');
+  assert.ok(s.documents.some((x) => x.memlog && x.kind === 'prds' && /FR001/.test(x.text)), 'los memlogs viajan con su texto');
+  assert.equal(s.decisions.all.length, 12, 'todas las entradas, no solo las clave');
   assert.equal(s.decisions.total, 12);
   assert.equal(s.decisions.ranking[0].id, 'FR001');
 
@@ -145,6 +148,8 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
     assert.match(html, lang === 'es' ? /Cuando se trabajo/ : /When work happened/);
     assert.match(html, /\$\{d\}\\n\$\{parts\.join\('\\n'\)\}/, 'los saltos de linea del tooltip llegan escapados al cliente (un \\n crudo rompia el script)');
     assert.match(html, /class="cal"/, 'calendario de actividad');
+    assert.match(html, /\/\^\\s\{2,\}\//, 'los backslashes de las regex del cliente sobreviven al template');
+    assert.match(html, /function mdBlock/, 'los documentos se renderizan en cliente');
     assert.match(html, /\\u003c/, 'el JSON embebido escapa < para no cerrar el script');
   }
   fs.rmSync(dir, { recursive: true, force: true });
