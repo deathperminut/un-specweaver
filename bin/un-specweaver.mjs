@@ -25,7 +25,6 @@ INIT
   quedan en .un-specweaver/config.json. Los flags siempre mandan sobre lo guardado.
 
   --lang es|en                 idioma de comandos, documentos y mensajes
-  --engram-scope project|global  memoria aislada por proyecto, o una sola para todo
   --graphify auto|off          usar el mapa del codigo si esta instalado, o ignorarlo
   --dry-run        imprime el plan exacto sin escribir ni ejecutar nada
   --yes            no pregunta antes de ejecutar el instalador remoto de Gentle-AI
@@ -55,7 +54,9 @@ function flags(argv) {
     const a = argv[i];
     if (a === '--agents') o.agents = argv[++i];
     else if (a === '--lang') o.lang = argv[++i];
-    else if (a === '--engram-scope') o.engramScope = argv[++i];
+    // Existio en 0.1.x. La memoria ahora es siempre por proyecto; se acepta para no romper
+    // scripts, se avisa, y se ignora.
+    else if (a === '--engram-scope') { argv[++i]; console.error('aviso: --engram-scope ya no existe, la memoria de Engram siempre se segmenta por proyecto'); }
     else if (a === '--graphify') o.graphify = argv[++i];
     else if (a === '--dry-run') o.dryRun = true;
     else if (a === '--yes' || a === '-y') o.yes = true;

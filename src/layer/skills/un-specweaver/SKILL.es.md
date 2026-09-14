@@ -81,13 +81,12 @@ cualquier default que asumirias.
 `.un-specweaver/config.json` guarda lo que el usuario eligio al inicializar:
 
 ```json
-"preferences": { "lang": "es", "engramScope": "project", "graphify": "auto" }
+"preferences": { "lang": "es", "graphify": "auto" }
 ```
 
 **Leelas antes de decidir por tu cuenta.** Si `graphify` es `"off"`, no lo uses aunque este
-instalado. Si `engramScope` es `"global"`, la memoria se comparte con los otros proyectos del
-usuario y conviene decirlo antes de guardar algo sensible. Nunca preguntes estas cosas en una
-conversacion: ya estan decididas, y se cambian con `npx un-specweaver init --graphify off`.
+instalado. Nunca preguntes estas cosas en una conversacion: ya estan decididas, y se cambian
+con `npx un-specweaver init --graphify off`.
 
 ## Capacidades opcionales
 
@@ -99,6 +98,11 @@ sin el y **dilo** — el fallo grave es invocarlo, que no pase nada, y seguir co
 **Engram** lo instala Gentle-AI, pero puede quedar bloqueado por la confianza de Homebrew.
 Si `engram` no esta en PATH, escribe el rationale en `design.md` del change bajo `## Decisions`
 y dilo. Nunca lo pierdas en silencio.
+
+La memoria de Engram **siempre esta segmentada por proyecto**: `.engram/config.json` fija el
+nombre, y todos los servidores MCP de Engram lo respetan. No busques con `all_projects` ni con
+un `project` ajeno salvo que el usuario lo pida: una memoria de otro proyecto leida como si
+fuera de este es la forma mas facil de alucinar con fuente.
 
 **uv** (Python) lo usa BMAD para resolver su configuracion. Si falta, las skills traen fallback
 manual: es mas lento, no es un error.

@@ -123,9 +123,11 @@
     "keep": "Todas las skills de Gentle-AI (judgment-day, work-unit-commits, branch-pr, los revisores) siguen disponibles."
   },
   "engram": {
-    "_comment": "VERIFICADO EN UNA MAQUINA REAL: engram usa UNA sola base (~/.engram/engram.db) para todos los proyectos. El aislamiento por --project SI funciona, pero la deteccion por directorio NO: una memoria guardada sin --project queda huerfana y aparece en cualquier busqueda sin filtro. Gentle-AI configura el MCP global sin --project, asi que por defecto la memoria se mezcla entre proyectos.",
+    "_comment": "VERIFICADO contra engram 1.20.0 (mem_current_project en una maquina real): el servidor MCP resuelve el proyecto por cwd en cada llamada, con esta prioridad: .engram/config.json (project_name) > git remote origin > raiz del repo git > unica carpeta hija con repo > basename. Sin nada de eso, la memoria se mezcla. La nota anterior ('la deteccion por directorio NO funciona') era de una version previa y ya no aplica.",
+    "bindingNote": "Se escribe .engram/config.json en vez de registrar 'engram mcp --project' en .mcp.json: (1) es el caso 0 de la deteccion y lo honran TODOS los servidores — el plugin engram@engram de Claude Code, el global que registra Gentle-AI, OpenCode y el CLI — porque todos resuelven por cwd; (2) .mcp.json solo lo lee Claude Code, y ahi el servidor extra convivia con el plugin: dos juegos de herramientas de memoria y el agente eligiendo al azar; (3) OpenCode nunca lo leia. El nombre se deriva igual que engram (repo del remote, minusculas) para que las memorias guardadas antes de init queden bajo la misma etiqueta.",
+    "readNote": "Las lecturas (mem_search, mem_context, mem_timeline) resuelven el mismo proyecto. Solo cruzan proyectos si el agente pasa all_projects=true o un project explicito, que engram valida contra la base. No es un muro, es un default: por eso la skill y los comandos prohiben cruzar salvo que el usuario lo pida.",
     "mcpServer": "engram",
-    "bindProject": true
+    "configFile": ".engram/config.json"
   },
   "_agentsScope": "Solo Claude Code y OpenCode. Son los dos que este flujo soporta de punta a punta: ambos tienen formato de comandos documentado, ambos reciben las skills, y ambos se probaron end-to-end. Agregar un agente es agregar una entrada aqui, pero no se declara soportado hasta haberlo corrido completo."
 }

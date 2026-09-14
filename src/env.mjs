@@ -117,15 +117,45 @@ export function untrustedItems(tap, names, home = os.homedir(), env = process.en
 // Engram lo instala Gentle-AI, pero puede quedar bloqueado por confianza de Homebrew.
 // Se detecta por la misma razon que graphify: el fallo grave seria que un comando diga
 // "registra esto en Engram", no pase nada, y el rationale se pierda en silencio.
-// Nombre de proyecto para Engram: estable, derivado de la carpeta. Es la etiqueta que
-// separa la memoria de un proyecto de la de otro.
+
+// Nombre de repo tal como lo deriva engram de `origin` (extractRepoName + normalize):
+// ultimo segmento de la URL, sin .git, en minusculas. Se replica para que las memorias
+// guardadas ANTES de correr init (por autodeteccion) queden bajo el mismo nombre.
+export function gitRemoteName(root) {
+  try {
+    const url = execFileSync('git', ['-C', root, 'remote', 'get-url', 'origin'], { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString().trim().replace(/\.git$/, '');
+    const name = url.split(/[/:]/).filter(Boolean).pop() || '';
+    return name.trim().toLowerCase() || null;
+  } catch { return null; }
+}
+
+// Nombre de proyecto para Engram: estable y derivado del repo. Es la etiqueta que separa
+// la memoria de un proyecto de la de otro. Primero el remote (lo mismo que engram
+// autodetecta); sin remote, la carpeta en forma segura.
 export function engramProject(root) {
+  const remote = gitRemoteName(root);
+  if (remote) return remote;
   return path.basename(path.resolve(root)).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
-// Lee del .mcp.json del proyecto si engram quedo atado a un proyecto concreto.
-// Sin ese binding la memoria es global y se mezcla entre proyectos: verificado.
+export const ENGRAM_CONFIG = path.join('.engram', 'config.json');
+
+// Lee a que proyecto quedo atada la memoria. La fuente es .engram/config.json: es el
+// caso 0 de la deteccion de engram (mayor prioridad) y lo respetan TODOS sus servidores
+// MCP — el plugin de Claude Code, el global de Gentle-AI, OpenCode y el CLI — porque
+// todos resuelven por cwd.
 export function engramBinding(root) {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(root, ENGRAM_CONFIG), 'utf8'));
+    return String(j.project_name || '').trim().toLowerCase() || null;
+  } catch { return null; }
+}
+
+// Version anterior: un servidor "engram" con --project en .mcp.json. En Claude Code
+// convivia con el plugin de Engram y el agente veia dos juegos de herramientas de
+// memoria; en OpenCode no aplicaba (no lee .mcp.json). Se detecta para retirarlo.
+export function legacyEngramMcp(root) {
   try {
     const j = JSON.parse(fs.readFileSync(path.join(root, '.mcp.json'), 'utf8'));
     const srv = j.mcpServers?.engram;
@@ -138,8 +168,7 @@ export function engramBinding(root) {
 
 export function detectEngram(root) {
   const bin = which('engram');
-  const store = ['.engram', '.atl'].map((d) => path.join(root, d)).find((d) => fs.existsSync(d));
-  return { available: !!bin, bin, store: store ? path.relative(root, store) : null, project: engramBinding(root) };
+  return { available: !!bin, bin, project: engramBinding(root), legacyMcp: !!legacyEngramMcp(root) };
 }
 
 export function isGitRepo(dir) {

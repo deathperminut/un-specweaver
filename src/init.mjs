@@ -20,10 +20,12 @@ function reportOptional(root, lang, prefs = DEFAULTS) {
     ? `${t(lang, 'graphify.present', g.where)} — ${g.graph ? t(lang, 'graphify.graph', g.graph) : t(lang, 'graphify.noGraph')}`
     : t(lang, 'graphify.absent'));
 
+  // La memoria SIEMPRE se segmenta por proyecto. Sin el binding, engram autodetecta por
+  // git remote (funciona, verificado en 1.20), pero el nombre lo decide cada servidor
+  // y no queda escrito en el repo: se reporta como pendiente, no como roto.
   const e = detectEngram(root);
-  const wantGlobal = prefs.engramScope === 'global';
-  line('engram', e.available && (!!e.project || wantGlobal), e.available
-    ? `${t(lang, 'engram.present', e.bin)} — ${e.project ? t(lang, 'engram.scoped', e.project) : t(lang, wantGlobal ? 'engram.globalByChoice' : 'engram.shared')}`
+  line('engram', e.available && !!e.project, e.available
+    ? `${t(lang, 'engram.present', e.bin)} — ${e.project ? t(lang, 'engram.scoped', e.project) : t(lang, 'engram.unbound')}`
     : t(lang, 'engram.absent'));
 
   return { graphify: g, engram: e };
@@ -34,7 +36,7 @@ export async function init(opts) {
   fs.mkdirSync(root, { recursive: true });
 
   const prior = readState(root);
-  const flags = { lang: opts.lang, engramScope: opts.engramScope, graphify: opts.graphify };
+  const flags = { lang: opts.lang, graphify: opts.graphify };
   for (const [k, v] of Object.entries(flags)) {
     const err = validateFlag(k, v);
     if (err) { console.error(err); return 2; }

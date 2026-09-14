@@ -2,7 +2,7 @@
 // Sin esa separacion, --dry-run seria una mentira mantenida a mano.
 import fs from 'node:fs';
 import path from 'node:path';
-import { VENDORS, which, vendorIds, isGitRepo, untrustedItems, engramProject, engramBinding } from './env.mjs';
+import { VENDORS, which, vendorIds, isGitRepo, untrustedItems, engramProject, engramBinding, legacyEngramMcp, ENGRAM_CONFIG } from './env.mjs';
 import { t } from './i18n.mjs';
 
 const LAYER = new URL('./layer/', import.meta.url);
@@ -299,30 +299,40 @@ export const STEPS = [
   {
     id: 'engram-scope',
     blocks: 'build',
-    // Sin dependsOn a proposito: ya verifica el binario de engram por su cuenta, y
-    // declarar la dependencia hacia que un fallo de gentle-config lo arrastrara.
+    // Sin dependsOn a proposito: el archivo que escribe no necesita el binario de engram,
+    // y declarar la dependencia hacia que un fallo de gentle-config lo arrastrara.
     titleKey: 'step.engram.title',
     status(ctx) {
-      if (ctx.prefs?.engramScope === 'global') return { state: 'skip', detail: t(ctx.lang, 'step.engram.globalChoice') };
-      if (!which('engram')) return { state: 'skip', detail: t(ctx.lang, 'step.engram.skip') };
       const bound = engramBinding(ctx.root);
       const want = engramProject(ctx.root);
+      if (legacyEngramMcp(ctx.root)) return { state: 'pending', detail: t(ctx.lang, 'step.engram.legacy') };
       return bound === want
         ? { state: 'ok', detail: t(ctx.lang, 'step.engram.ok', bound) }
         : { state: 'pending', detail: t(ctx.lang, 'step.engram.pending', want) };
     },
     plan(ctx) {
-      const f = path.join(ctx.root, '.mcp.json');
+      // VERIFICADO contra engram 1.20: .engram/config.json es el caso 0 de su deteccion de
+      // proyecto y lo honran todos sus servidores MCP (plugin de Claude Code, global de
+      // Gentle-AI, OpenCode, CLI) porque resuelven por cwd. Un solo archivo, un solo nombre,
+      // sin registrar un segundo servidor. Va al repo: el equipo comparte la etiqueta.
       const project = engramProject(ctx.root);
-      let j = {};
-      try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { /* nuevo */ }
-      j.mcpServers = j.mcpServers || {};
-      // Se preservan los demas servidores; solo se define/ajusta engram.
-      j.mcpServers.engram = {
-        command: which('engram') || 'engram',
-        args: ['mcp', '--tools=agent', '--project', project],
-      };
-      return [write(f, JSON.stringify(j, null, 2) + '\n', t(ctx.lang, 'step.engram.why'))];
+      const actions = [write(
+        path.join(ctx.root, ENGRAM_CONFIG),
+        JSON.stringify({ project_name: project }, null, 2) + '\n',
+        t(ctx.lang, 'step.engram.why', project),
+      )];
+
+      // Migracion: la version anterior registraba un servidor "engram --project" en .mcp.json.
+      // En Claude Code duplicaba al plugin de Engram (dos juegos de herramientas de memoria).
+      // Se retira SOLO esa entrada; los demas servidores del usuario quedan intactos.
+      if (legacyEngramMcp(ctx.root)) {
+        const f = path.join(ctx.root, '.mcp.json');
+        const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+        delete j.mcpServers.engram;
+        actions.push(note(t(ctx.lang, 'step.engram.legacyNote')));
+        actions.push(write(f, JSON.stringify(j, null, 2) + '\n', t(ctx.lang, 'step.engram.legacyWhy')));
+      }
+      return actions;
     },
   },
 

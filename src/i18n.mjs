@@ -38,11 +38,6 @@ Los comandos, para tenerlos a mano:
     1) Espanol
     2) English
 `,
-    'prefs.engramScope': `
-  Memoria de Engram
-    1) Por proyecto  — este proyecto no ve la memoria de los demas
-    2) Global        — una sola memoria para todo lo que trabajes
-`,
     'prefs.graphify': `
   Mapa del codigo con graphify (opcional, se detecta solo)
     1) Usarlo si esta instalado
@@ -155,18 +150,18 @@ ${cmds}
     'engram.name': 'engram',
     'engram.present': (b) => `presente (${b})`,
     'engram.absent': 'ausente — el flujo funciona, pero el rationale de las decisiones no se guarda',
-    'engram.globalByChoice': 'memoria GLOBAL por configuracion — compartida con tus otros proyectos',
     'graphify.disabled': 'desactivado por configuracion del proyecto',
-    'step.engram.globalChoice': 'configurado como memoria global',
-    'engram.store': (p) => `memoria en ${p}`,
-    'engram.noStore': 'binario disponible, sin memoria en este proyecto todavia',
-    'engram.scoped': (p) => `memoria aislada como "${p}"`,
-    'engram.shared': 'MEMORIA COMPARTIDA con otros proyectos — sin --project, las busquedas ven todo',
-    'step.engram.title': 'Aislar la memoria de Engram por proyecto',
-    'step.engram.ok': (p) => `atado a "${p}"`,
-    'step.engram.pending': (p) => `atar la memoria al proyecto "${p}"`,
-    'step.engram.skip': 'engram no esta instalado',
-    'step.engram.why': 'sin esto la memoria de este proyecto se mezcla con la de los demas',
+    'engram.scoped': (p) => `memoria segmentada como "${p}" (.engram/config.json)`,
+    'engram.unbound': 'sin .engram/config.json — engram autodetecta el proyecto, pero el nombre no queda fijado en el repo',
+    'step.engram.title': 'Segmentar la memoria de Engram por proyecto',
+    'step.engram.ok': (p) => `atada a "${p}"`,
+    'step.engram.pending': (p) => `escribir .engram/config.json con "${p}"`,
+    'step.engram.legacy': 'migrar: .mcp.json trae un servidor engram --project de una version anterior',
+    'step.engram.legacyNote': `El servidor "engram --project" en .mcp.json era de la version anterior. En Claude Code
+     convivia con el plugin de Engram y el agente veia dos juegos de herramientas de memoria;
+     OpenCode no lo leia. .engram/config.json lo reemplaza para todos los agentes.`,
+    'step.engram.legacyWhy': 'retira solo la entrada engram; los demas servidores MCP quedan igual',
+    'step.engram.why': (p) => `fija "${p}" como proyecto de Engram para todos los agentes; sin esto cada servidor deriva el nombre por su cuenta`,
 
     'graphify.name': 'graphify',
     'graphify.present': (where) => `presente (${where})`,
@@ -210,11 +205,6 @@ The commands, for reference:
   Language for commands, documents and messages
     1) Espanol
     2) English
-`,
-    'prefs.engramScope': `
-  Engram memory
-    1) Per project  — this project does not see other projects' memory
-    2) Global       — one shared memory across everything you work on
 `,
     'prefs.graphify': `
   Code map via graphify (optional, auto-detected)
@@ -325,37 +315,22 @@ ${cmds}
     'doctor.pending': (n) => `\n${n} step(s) pending. Run "un-specweaver init" — completed ones are skipped.`,
     'doctor.allGood': '\nAll up to date.',
 
-    'engram.name': 'engram',
-    'engram.present': (b) => `presente (${b})`,
-    'engram.absent': 'ausente — el flujo funciona, pero el rationale de las decisiones no se guarda',
-    'engram.globalByChoice': 'memoria GLOBAL por configuracion — compartida con tus otros proyectos',
-    'graphify.disabled': 'desactivado por configuracion del proyecto',
-    'step.engram.globalChoice': 'configurado como memoria global',
-    'engram.store': (p) => `memoria en ${p}`,
-    'engram.noStore': 'binario disponible, sin memoria en este proyecto todavia',
-    'engram.scoped': (p) => `memoria aislada como "${p}"`,
-    'engram.shared': 'MEMORIA COMPARTIDA con otros proyectos — sin --project, las busquedas ven todo',
-    'step.engram.title': 'Aislar la memoria de Engram por proyecto',
-    'step.engram.ok': (p) => `atado a "${p}"`,
-    'step.engram.pending': (p) => `atar la memoria al proyecto "${p}"`,
-    'step.engram.skip': 'engram no esta instalado',
-    'step.engram.why': 'sin esto la memoria de este proyecto se mezcla con la de los demas',
 
     'engram.name': 'engram',
     'engram.present': (b) => `present (${b})`,
     'engram.absent': 'absent — the flow works, but decision rationale is not recorded',
-    'engram.globalByChoice': 'GLOBAL memory by configuration — shared with your other projects',
     'graphify.disabled': 'disabled by project configuration',
-    'step.engram.globalChoice': 'configured as global memory',
-    'engram.store': (p) => `memory at ${p}`,
-    'engram.noStore': 'binary available, no memory in this project yet',
-    'engram.scoped': (p) => `memory isolated as "${p}"`,
-    'engram.shared': 'MEMORY SHARED with other projects — without --project, searches see everything',
+    'engram.scoped': (p) => `memory scoped as "${p}" (.engram/config.json)`,
+    'engram.unbound': 'no .engram/config.json — engram auto-detects the project, but the name is not pinned in the repo',
     'step.engram.title': 'Scope Engram memory to this project',
     'step.engram.ok': (p) => `bound to "${p}"`,
-    'step.engram.pending': (p) => `bind memory to project "${p}"`,
-    'step.engram.skip': 'engram is not installed',
-    'step.engram.why': "without this the project's memory mixes with every other project's",
+    'step.engram.pending': (p) => `write .engram/config.json with "${p}"`,
+    'step.engram.legacy': 'migrate: .mcp.json carries an engram --project server from a previous version',
+    'step.engram.legacyNote': `The "engram --project" server in .mcp.json came from the previous version. In Claude Code
+     it coexisted with the Engram plugin and the agent saw two sets of memory tools;
+     OpenCode never read it. .engram/config.json replaces it for every agent.`,
+    'step.engram.legacyWhy': 'removes only the engram entry; every other MCP server stays untouched',
+    'step.engram.why': (p) => `pins "${p}" as the Engram project for every agent; without it each server derives the name on its own`,
 
     'graphify.name': 'graphify',
     'graphify.present': (where) => `present (${where})`,

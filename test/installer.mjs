@@ -6,7 +6,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { VENDORS, which, gte, vendorIds, preflight, detectAgents, detectGraphify, detectEngram, brewTrusted, brewTapKinds, untrustedItems } from '../src/env.mjs';
 import { runAction, runPlan } from '../src/run.mjs';
-import { engramProject, engramBinding, writeState, readState } from '../src/env.mjs';
+import { engramProject, engramBinding, legacyEngramMcp, gitRemoteName, ENGRAM_CONFIG, writeState, readState } from '../src/env.mjs';
 import { t, keysOf } from '../src/i18n.mjs';
 import { resolvePrefs, parseAnswer, parseAgents, DEFAULTS, CHOICES, validateFlag } from '../src/prefs.mjs';
 import { buildPlan, STEPS, renderAction, renderCommand, commandPath, NAMESPACE, gitignoreBlock, GITIGNORE_START } from '../src/steps.mjs';
@@ -548,14 +548,16 @@ test('Engram se trata como capacidad opcional, no se asume', () => {
   }
 });
 
-test('detectEngram no explota y reporta el store del proyecto', () => {
+test('detectEngram no explota y reporta el proyecto atado', () => {
   const root = tmp();
   let e = detectEngram(root);
-  assert.equal(e.store, null);
+  assert.equal(e.project, null);
+  assert.equal(e.legacyMcp, false);
   assert.equal(typeof e.available, 'boolean');
   fs.mkdirSync(path.join(root, '.engram'), { recursive: true });
+  fs.writeFileSync(path.join(root, ENGRAM_CONFIG), JSON.stringify({ project_name: 'Demo' }));
   e = detectEngram(root);
-  assert.equal(e.store, '.engram');
+  assert.equal(e.project, 'demo', 'engram normaliza a minusculas; se reporta igual');
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -795,42 +797,73 @@ test('las rutas de poda caen dentro del proyecto, tambien con agentes detectados
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test('la memoria de Engram se ata al proyecto: sin eso se mezcla entre proyectos', async () => {
-  // VERIFICADO en una maquina real: engram usa una sola base para todo, el aislamiento por
-  // --project funciona, pero la deteccion por directorio NO. Una memoria sin --project queda
-  // huerfana y aparece en cualquier busqueda. Gentle-AI configura el MCP global sin --project.
+test('la memoria de Engram se segmenta por proyecto con .engram/config.json', () => {
+  // VERIFICADO contra engram 1.20: .engram/config.json es el caso 0 de su deteccion de
+  // proyecto y lo honran todos sus servidores MCP (plugin de Claude Code, global de Gentle-AI,
+  // OpenCode, CLI). Registrar un segundo servidor con --project en .mcp.json duplicaba las
+  // herramientas de memoria en Claude Code y OpenCode ni lo leia.
   const root = tmp();
   const step = STEPS.find((s) => s.id === 'engram-scope');
-  const st = step.status(ctxFor(root));
-  if (st.state === 'skip') { fs.rmSync(root, { recursive: true, force: true }); return; }
+  assert.equal(step.status(ctxFor(root)).state, 'pending', 'siempre se ata, haya o no binario');
 
-  const [action] = step.plan(ctxFor(root));
+  const actions = step.plan(ctxFor(root));
+  assert.equal(actions.length, 1, 'sin legado, una sola escritura');
+  const [action] = actions;
   assert.equal(action.kind, 'write');
-  assert.ok(action.file.endsWith('.mcp.json'));
-  const j = JSON.parse(action.content);
-  assert.deepEqual(j.mcpServers.engram.args.slice(0, 2), ['mcp', '--tools=agent']);
-  assert.equal(j.mcpServers.engram.args[j.mcpServers.engram.args.indexOf('--project') + 1], engramProject(root));
+  assert.ok(action.file.endsWith(path.join('.engram', 'config.json')));
+  assert.deepEqual(JSON.parse(action.content), { project_name: engramProject(root) });
+
+  fs.mkdirSync(path.dirname(action.file), { recursive: true });
+  fs.writeFileSync(action.file, action.content);
+  assert.equal(step.status(ctxFor(root)).state, 'ok', 'despues de escribirlo, esta al dia');
+  assert.equal(engramBinding(root), engramProject(root));
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test('atar engram preserva los otros servidores MCP del proyecto', () => {
+test('el servidor engram --project de la version anterior se retira sin tocar los demas', () => {
   const root = tmp();
   const step = STEPS.find((s) => s.id === 'engram-scope');
-  if (step.status(ctxFor(root)).state === 'skip') { fs.rmSync(root, { recursive: true, force: true }); return; }
+  fs.writeFileSync(path.join(root, '.mcp.json'), JSON.stringify({ mcpServers: {
+    context7: { command: 'npx', args: ['-y', 'ctx7'] },
+    engram: { command: 'engram', args: ['mcp', '--tools=agent', '--project', 'viejo'] },
+  } }));
+  assert.equal(legacyEngramMcp(root), 'viejo');
+  assert.match(step.status(ctxFor(root)).detail, /migrar/);
 
-  fs.writeFileSync(path.join(root, '.mcp.json'),
-    JSON.stringify({ mcpServers: { context7: { command: 'npx', args: ['-y', 'ctx7'] } } }));
-  const j = JSON.parse(step.plan(ctxFor(root))[0].content);
+  const actions = step.plan(ctxFor(root));
+  const mcp = actions.find((a) => a.kind === 'write' && a.file.endsWith('.mcp.json'));
+  assert.ok(mcp, 'debe reescribir .mcp.json');
+  const j = JSON.parse(mcp.content);
   assert.ok(j.mcpServers.context7, 'no puede borrar servidores que ya estaban');
-  assert.equal(j.mcpServers.context7.command, 'npx');
-  assert.ok(j.mcpServers.engram, 'y debe agregar el suyo');
+  assert.equal(j.mcpServers.engram, undefined, 'y debe quitar solo el suyo');
+  assert.ok(actions.some((a) => a.kind === 'note' && /plugin/i.test(a.text)), 'explica por que se retira');
+
+  // Un .mcp.json con engram SIN --project no es nuestro (lo pudo escribir Gentle-AI): no se toca.
+  fs.writeFileSync(path.join(root, '.mcp.json'), JSON.stringify({ mcpServers: {
+    engram: { command: 'engram', args: ['mcp', '--tools=agent'] },
+  } }));
+  assert.equal(legacyEngramMcp(root), null);
+  assert.ok(!step.plan(ctxFor(root)).some((a) => a.kind === 'write' && a.file.endsWith('.mcp.json')));
   fs.rmSync(root, { recursive: true, force: true });
 });
 
-test('el nombre de proyecto de Engram es estable y seguro', () => {
+test('el nombre de proyecto de Engram coincide con el que engram autodetecta', () => {
+  // Sin repo, carpeta en forma segura.
   assert.equal(engramProject('/a/b/LandingPageJSMR'), 'landingpagejsmr');
   assert.equal(engramProject('/a/b/un-specweaver-web'), 'un-specweaver-web');
   assert.equal(engramProject('/a/b/Mi Proyecto 2026'), 'mi-proyecto-2026');
+
+  // Con remote, el nombre del repo tal como lo deriva engram (extractRepoName + lowercase):
+  // asi las memorias guardadas ANTES de init quedan bajo la misma etiqueta.
+  const root = tmp();
+  execFileSync('git', ['-C', root, 'init', '-q']);
+  assert.equal(gitRemoteName(root), null, 'sin origin no hay nombre de remote');
+  execFileSync('git', ['-C', root, 'remote', 'add', 'origin', 'git@github.com:Acme/Backend_API.git']);
+  assert.equal(gitRemoteName(root), 'backend_api');
+  assert.equal(engramProject(root), 'backend_api', 'gana el remote sobre la carpeta');
+  execFileSync('git', ['-C', root, 'remote', 'set-url', 'origin', 'https://github.com/acme/web-app']);
+  assert.equal(engramProject(root), 'web-app');
+  fs.rmSync(root, { recursive: true, force: true });
 });
 
 // --- preferencias del proyecto -------------------------------------------------
@@ -843,46 +876,48 @@ test('las preferencias respetan flag > guardado > pregunta > default', async () 
 
   // Con las otras dos ya guardadas, no queda nada que preguntar y el flag pisa lo guardado.
   const flagGana = await resolvePrefs(
-    { flags: { lang: 'en' }, stored: { lang: 'es', engramScope: 'project', graphify: 'auto' }, isTTY: true },
+    { flags: { lang: 'en' }, stored: { lang: 'es', graphify: 'auto' }, isTTY: true },
     never,
   );
   assert.equal(flagGana.prefs.lang, 'en', 'el flag manda sobre lo guardado');
 
+  // Un config.json de 0.1.x traia engramScope; se ignora sin romper nada.
   const guardado = await resolvePrefs({ stored: { lang: 'en', engramScope: 'global', graphify: 'off' }, isTTY: true }, never);
-  assert.deepEqual(guardado.prefs, { lang: 'en', engramScope: 'global', graphify: 'off' }, 'reinstalar no vuelve a preguntar');
+  assert.deepEqual(guardado.prefs, { lang: 'en', graphify: 'off' }, 'reinstalar no vuelve a preguntar');
 });
 
 test('solo pregunta lo que falta, no todo de nuevo', async () => {
   let preguntadas = null;
   const r = await resolvePrefs(
-    { flags: { lang: 'en' }, stored: { graphify: 'off' }, isTTY: true },
-    async (keys) => { preguntadas = keys; return { engramScope: '2' }; },
+    { flags: { lang: 'en' }, isTTY: true },
+    async (keys) => { preguntadas = keys; return { graphify: '2' }; },
   );
-  assert.deepEqual(preguntadas, ['engramScope'], 'lang venia por flag y graphify guardado');
-  assert.equal(r.prefs.engramScope, 'global');
+  assert.deepEqual(preguntadas, ['graphify'], 'lang venia por flag');
+  assert.equal(r.prefs.graphify, 'off');
 });
 
 test('las respuestas aceptan formas razonables y caen al default', () => {
   for (const a of ['2', 'en', 'EN', 'English', ' ingles ']) assert.equal(parseAnswer('lang', a, 'es'), 'en', a);
   for (const a of ['1', 'es', 'espanol', '', 'cualquier cosa']) assert.equal(parseAnswer('lang', a, 'es'), 'es', a);
-  for (const a of ['2', 'g', 'global']) assert.equal(parseAnswer('engramScope', a, 'project'), 'global', a);
   for (const a of ['2', 'off', 'no']) assert.equal(parseAnswer('graphify', a, 'auto'), 'off', a);
 });
 
 test('un valor invalido en un flag se rechaza en vez de aceptarse a medias', () => {
   assert.equal(validateFlag('lang', 'es'), null);
   assert.match(validateFlag('lang', 'fr'), /--lang/);
-  assert.match(validateFlag('engramScope', 'compartido'), /--engramScope/);
+  assert.match(validateFlag('graphify', 'maybe'), /--graphify/);
   assert.equal(validateFlag('graphify', undefined), null, 'ausente no es invalido');
   for (const [k, vals] of Object.entries(CHOICES))
     assert.ok(vals.includes(DEFAULTS[k]), `el default de ${k} debe ser una opcion valida`);
 });
 
-test('engramScope global salta el paso de aislamiento en vez de contradecirlo', () => {
-  const root = tmp();
+test('la segmentacion de Engram no es una preferencia: no se pregunta ni se puede apagar', () => {
+  assert.equal(DEFAULTS.engramScope, undefined);
+  assert.equal(CHOICES.engramScope, undefined);
   const step = STEPS.find((s) => s.id === 'engram-scope');
-  const global = step.status({ ...ctxFor(root), prefs: { ...DEFAULTS, engramScope: 'global' } });
-  assert.equal(global.state, 'skip', 'si elegiste memoria global, no se ata al proyecto');
+  const root = tmp();
+  assert.notEqual(step.status({ ...ctxFor(root), prefs: { engramScope: 'global' } }).state, 'skip',
+    'un config.json viejo con engramScope:global ya no desactiva el paso');
   fs.rmSync(root, { recursive: true, force: true });
 });
 
@@ -902,11 +937,19 @@ test('los comandos consultan las preferencias antes de decidir por su cuenta', (
   }
 });
 
-test('engramScope global se advierte antes de guardar, no despues', () => {
+test('los comandos declaran que la memoria es por proyecto y prohiben cruzarla por defecto', () => {
+  // El riesgo es el agente leyendo memoria de OTRO proyecto como si fuera de este:
+  // una alucinacion con fuente. Se dice en los comandos que guardan y en la skill.
   for (const lang of ['es', 'en']) {
-    const src = fs.readFileSync(path.join(LAYER, 'commands', lang, 'build.md'), 'utf8');
-    assert.match(src, /engramScope/, `${lang}: debe consultar el alcance`);
-    assert.match(src, lang === 'es' ? /dilo antes de guardarlo/ : /say so first/, `${lang}: aviso previo`);
+    for (const f of ['build', 'change']) {
+      const src = fs.readFileSync(path.join(LAYER, 'commands', lang, `${f}.md`), 'utf8');
+      assert.match(src, /\.engram\/config\.json/, `${lang}/${f}: debe nombrar el binding`);
+      assert.match(src, /all_projects/, `${lang}/${f}: debe nombrar el unico modo que cruza`);
+      assert.doesNotMatch(src, /engramScope/, `${lang}/${f}: la preferencia ya no existe`);
+    }
+    const skill = fs.readFileSync(path.join(LAYER, 'skills', 'un-specweaver', `SKILL.${lang}.md`), 'utf8');
+    assert.match(skill, /\.engram\/config\.json/, `SKILL.${lang}: debe nombrar el binding`);
+    assert.doesNotMatch(skill, /engramScope/, `SKILL.${lang}`);
   }
 });
 

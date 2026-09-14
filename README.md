@@ -103,7 +103,8 @@ Ademas la herramienta hace tres cosas que suenan menores y no lo son:
   pueda ignorar.
 - **Deja un solo vocabulario.** Los comandos de los vendors se ocultan; queda `/sw:*`. Las skills
   utiles siguen todas disponibles.
-- **Aisla la memoria por proyecto.** Por defecto se comparte entre proyectos; aqui se ata a este.
+- **Segmenta la memoria por proyecto.** Escribe `.engram/config.json` con el nombre del proyecto,
+  que es lo que todos los servidores de Engram respetan. No es una opcion: siempre pasa.
 
 Nada se forkea. Los vendors se actualizan solos y el pin vive en un unico archivo.
 
@@ -201,7 +202,7 @@ cd mi-proyecto
 npx un-specweaver init
 ```
 
-Hace cuatro preguntas —idioma, alcance de la memoria, graphify y que agentes configurar— y
+Hace tres preguntas —idioma, graphify y que agentes configurar— y
 despues instala BMAD, inicializa OpenSpec y configura Gentle-AI. Tarda unos minutos.
 
 **En macOS se va a detener una vez** pidiendo autorizar un tap de Homebrew: Gentle-AI instala
@@ -224,22 +225,20 @@ detecta tu gestor de paquetes. Va a pedir confirmacion antes de ejecutar el scri
 
 ---
 
-### Las cuatro preguntas de `init`
+### Las tres preguntas de `init`
 
 Se hacen **una sola vez** y quedan en `.un-specweaver/config.json`:
 
 | Pregunta | Opciones | Recomendado |
 |---|---|---|
 | Idioma | Espanol / English | el del equipo |
-| Memoria de Engram | Por proyecto / Global | **por proyecto** |
 | graphify | Usarlo si esta / Ignorarlo | usarlo si esta |
 | Agentes | los detectados en la maquina | los que uses de verdad |
 
 Sin preguntas, para scripts o CI:
 
 ```bash
-npx un-specweaver init --lang es --engram-scope project --graphify auto \
-  --agents claude-code,opencode --yes
+npx un-specweaver init --lang es --graphify auto --agents claude-code,opencode --yes
 ```
 
 ### Verificar
@@ -307,8 +306,13 @@ Preflight lo revisa como **aviso, no como bloqueante**: las skills de BMAD traen
 npx un-specweaver init [dir]          # monta el entorno completo
 npx un-specweaver doctor [dir]        # salud, pasos pendientes y drift de vendors
 npx un-specweaver bridge <epics.md>   # stories de BMAD -> changes de OpenSpec
+npx un-specweaver context [dir]       # artefactos de planeacion, en sus rutas reales
 npx un-specweaver vendors             # versiones pineadas
 ```
+
+`context` existe porque BMAD escribe en rutas fechadas y configurables (`{planning_artifacts}`).
+Lista brief, PRD, arquitectura, UX y `epics.md` donde de verdad quedaron, para que `/sw:build`
+los cargue en vez de adivinarlos.
 
 `init` acepta `--agents`, `--lang es|en`, `--dry-run`, `--yes`, `--force`, `--prune-extra`,
 `--only`, `--skip`, `--keep-going`.
@@ -325,7 +329,10 @@ nada. El plan y la ejecucion salen del mismo codigo, asi que no puede mentir.
 4. Poda de la frontera
 5. `openspec init` con los agentes detectados
 6. Gentle-AI: binario (brew si esta disponible, si no el script oficial) + configuracion `--scope workspace`
-7. Los ocho comandos `/sw:*` en el formato de cada agente, la skill `un-specweaver` en todos los
+7. `.engram/config.json` con el nombre del proyecto: la memoria de Engram queda segmentada para
+   todos los agentes. Si una version anterior dejo un servidor `engram --project` en `.mcp.json`,
+   lo retira
+8. Los nueve comandos `/sw:*` en el formato de cada agente, la skill `un-specweaver` en todos los
    dirs de skills, y `docs/architecture-base.md`
 
 ### Prerequisitos que la herramienta NO resuelve sola
@@ -358,7 +365,7 @@ seria mentir.
 | Paso | Bloquea |
 |---|---|
 | `bmad`, `bmad-prune`, `openspec`, `layer` | planear (`/sw:new`, `/sw:adopt`) |
-| `gentle-bin`, `gentle-config` | **solo** `/sw:build` — planear funciona sin ellos |
+| `gentle-bin`, `gentle-config`, `engram-scope` | **solo** `/sw:build` — planear funciona sin ellos |
 | `gitignore` | nada; es higiene del repo |
 
 Sin esa distincion un agente se detiene por Gentle-AI antes siquiera de levantar requerimientos,
@@ -375,6 +382,7 @@ reemplaza en vez de duplicarlo). En un proyecto real la diferencia es de **499 a
 | `_bmad-output/` — PRD y epics | `.claude/skills/bmad-*/`, `.agents/skills/bmad-*/` |
 | `docs/architecture-base.md` | `.claude/commands/sw/`, `.opencode/commands/sw-*.md` |
 | `.un-specweaver/` — config y trazabilidad | skills y comandos de OpenSpec |
+| `.engram/config.json` — nombre del proyecto en Engram | |
 
 Se ignora **por patron exacto, nunca `.claude/` entero**: tus propias skills y comandos siguen
 versionados. Un companero clona, corre `npx un-specweaver init`, y reconstituye el tooling desde
@@ -433,6 +441,15 @@ Todas verificadas contra los CLIs reales, no contra la documentacion.
 - **`openspec validate --strict` exige el literal `SHALL`/`MUST`** aunque el spec este en espanol.
   El modo por defecto emite prosa espanola con el keyword intacto; `--normative debe` lee mejor
   pero obliga a soltar `--strict`.
+- **La memoria de Engram se segmenta con `.engram/config.json`, no con `--project`.** Engram 1.20
+  resuelve el proyecto por cwd en cada llamada (config → git remote → raiz git → carpeta), y ese
+  archivo es la primera prioridad para **todos** sus servidores: el plugin de Claude Code, el
+  global que registra Gentle-AI, OpenCode y el CLI. La version 0.1.x registraba un segundo
+  servidor `engram mcp --project` en `.mcp.json`; en Claude Code eso convivia con el plugin y el
+  agente veia dos juegos de herramientas de memoria, y OpenCode ni lo leia. El nombre se deriva
+  igual que engram (repo del remote, minusculas) para que lo guardado antes de `init` quede bajo
+  la misma etiqueta. Las lecturas solo cruzan proyectos si el agente pide `all_projects`; la skill
+  y los comandos lo prohiben salvo que el usuario lo pida.
 - **Cada vendor nombra los agentes distinto** (BMAD `claude-code`, OpenSpec `claude`,
   Gentle `claude-code`). El mapa en `src/vendors.json` es el unico lugar donde eso se sabe.
 - **`uv` es un prerequisito real de BMAD** que su documentacion no destaca: el instalador lo
@@ -484,9 +501,10 @@ implementando `status()` y `plan()`; `--dry-run`, la idempotencia y `doctor` sal
 |---|---|
 | `bridge/` — story → change | **funciona**, es/en, validado contra `openspec validate --all --strict` |
 | `init` / `doctor` — instalador multi-agente | **funciona**, probado end-to-end desde el tarball |
-| 8 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
+| 9 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
 | Skill `un-specweaver` | **funciona**, es/en, todos los agentes |
 | Mensajes del CLI bilingües | **funciona**, 86 cadenas, es/en |
 | graphify como capacidad opcional | **funciona**, deteccion + tres ramas declaradas |
 | Gentle-AI (binario) | **funciona** — instala via Homebrew |
-| Engram | bloqueado por confianza del tap; detectado y reportado con remedio, sin ejecutar |
+| Engram (instalacion) | bloqueado por confianza del tap; detectado y reportado con remedio, sin ejecutar |
+| Engram (memoria por proyecto) | **funciona** — `.engram/config.json`, verificado contra engram 1.20 |
