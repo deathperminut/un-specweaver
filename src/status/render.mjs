@@ -250,12 +250,13 @@ details.it{background:var(--card);border:1px solid var(--line);border-radius:8px
 .tk .tkb{width:16px;height:16px;border:1.5px solid var(--line2);border-radius:4px;display:grid;place-items:center;font-size:11px;color:var(--good);margin-top:2px}.tk.done .tkb{border-color:var(--good);background:var(--good-soft)}.tk .n{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:2px}.tk .tx{line-height:1.5}.tk .tx code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}
 details.it .body code{background:var(--card2);border:1px solid var(--line);padding:0 5px;border-radius:4px;color:var(--acc)}.dc p code,.tl p code{background:var(--card2);border:1px solid var(--line);padding:0 4px;border-radius:4px;color:var(--acc)}
 .expl{background:var(--card2);border-left:3px solid var(--warn);border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:var(--fg)}
-.hm{display:flex;gap:10px;align-items:flex-start;overflow-x:auto;padding:4px 0 8px}.hm .dows{display:grid;grid-template-rows:repeat(7,13px);gap:3px;margin-top:20px;font-size:10px;color:var(--muted);font-family:var(--mono)}.hm .dows span{height:13px;line-height:13px}
-.hm .weeks{display:flex;flex-direction:column;gap:4px}.hm .months{display:flex;gap:3px;height:14px;font-size:10px;color:var(--muted);font-family:var(--mono)}.hm .months span{width:13px;flex:none;white-space:nowrap}.hm .grid{display:flex;gap:3px}.hm .wk{display:grid;grid-template-rows:repeat(7,13px);gap:3px}
-.hm i{width:13px;height:13px;border-radius:3px;background:var(--card2);border:1px solid rgba(255,255,255,.04);display:block;position:relative}.hm i.l1{background:#134e2c}.hm i.l2{background:#1e7a3f}.hm i.l3{background:#2ea653}.hm i.l4{background:#4ade80}.hm i.today{outline:1px solid var(--acc)}.hm i.off{background:transparent;border-color:transparent}
-.hm i:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:18px;transform:translateX(-50%);white-space:pre;background:#0b1020;border:1px solid var(--line2);color:var(--fg);font:11px/1.5 var(--sans);padding:6px 9px;border-radius:6px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left}
-.hmleg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);justify-content:flex-end;margin-top:4px}.hmleg i{width:11px;height:11px;border-radius:2px;display:inline-block;background:var(--card2)}.hmleg i.l1{background:#134e2c}.hmleg i.l2{background:#1e7a3f}.hmleg i.l3{background:#2ea653}.hmleg i.l4{background:#4ade80}
-.hmsum{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:10px}.hmsum b{color:var(--fg);font-weight:600;font-family:var(--mono)}
+.cal{display:flex;flex-wrap:wrap;gap:14px}.mon{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px}.mon h5{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--fg);letter-spacing:.3px;display:flex;justify-content:space-between;gap:10px}.mon h5 small{color:var(--muted);font-weight:400;font-family:var(--mono)}
+.mon .dh,.mon .dg{display:grid;grid-template-columns:repeat(7,24px);gap:3px}.mon .dh span{font-size:9.5px;color:var(--dim);text-align:center;font-family:var(--mono)}.mon .dg{margin-top:3px}
+.mon i{width:24px;height:24px;border-radius:5px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font:10.5px var(--mono);color:var(--dim);font-style:normal;position:relative}.mon i.l1{background:#134e2c;color:#c7f0d4;border-color:#134e2c}.mon i.l2{background:#1e7a3f;color:#e6fbec;border-color:#1e7a3f}.mon i.l3{background:#2ea653;color:#0b1f12;border-color:#2ea653}.mon i.l4{background:#4ade80;color:#0b1f12;border-color:#4ade80}
+.mon i.today{outline:1.5px solid var(--acc);outline-offset:1px}.mon i.off{background:transparent;border-color:transparent}.mon i.future{opacity:.35}
+.mon i[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:50%;bottom:30px;transform:translateX(-50%);white-space:pre;background:#0b1020;border:1px solid var(--line2);color:var(--fg);font:11px/1.5 var(--sans);padding:6px 9px;border-radius:6px;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.5);text-align:left}
+.hmleg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);justify-content:flex-end;margin-top:10px}.hmleg i{width:11px;height:11px;border-radius:2px;display:inline-block;background:var(--card)}.hmleg i.l1{background:#134e2c}.hmleg i.l2{background:#1e7a3f}.hmleg i.l3{background:#2ea653}.hmleg i.l4{background:#4ade80}
+.hmsum{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-bottom:12px}.hmsum b{color:var(--fg);font-weight:600;font-family:var(--mono)}
 .work{display:flex;align-items:flex-start;overflow-x:auto;padding:14px 4px 4px}.wd{min-width:190px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;position:relative}.wd time{font-family:var(--mono);color:var(--acc);font-size:12px}.wd .k{margin-top:6px;display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted)}.wd .k b{color:var(--fg);font-weight:500;font-family:var(--mono);margin-right:4px}
 .wgap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:90px;color:var(--dim);font-size:11px;font-family:var(--mono);position:relative}.wgap::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:2px dashed var(--line2)}.wgap span{background:var(--bg);padding:0 6px;position:relative}
 .stt{width:100%;border-collapse:collapse}.stt th,.stt td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}.stt th:first-child,.stt td:first-child{text-align:left}.stt th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
@@ -363,7 +364,7 @@ function openCanvas(k){
 }
 function closeCanvas(){ $('#canvas').classList.remove('open'); document.body.style.overflow = ''; }
 
-// ---- cuando se trabajo: grilla de calor por dia (semanas en columnas) ------------------
+// ---- cuando se trabajo: un calendario por mes, del primer dia con actividad a hoy ---------
 function workSec(){
   const days = m.activity || [];
   if (!days.length) return \`<section><h2>\${T.work}</h2><div class="empty">\${T.noHistory}</div></section>\`;
@@ -372,24 +373,28 @@ function workSec(){
   const max = Math.max(1, ...days.map(total));
   const lvl = (n) => n <= 0 ? 0 : n >= max*0.75 ? 4 : n >= max*0.5 ? 3 : n >= max*0.25 ? 2 : 1;
   const iso = (dt) => dt.toISOString().slice(0,10);
-  const today = new Date(); today.setUTCHours(0,0,0,0);
-  const first = new Date(days[0].date + 'T00:00:00Z'); const last = new Date(Math.max(new Date(days[days.length-1].date + 'T00:00:00Z'), today));
-  // Empezar en el lunes de la semana del primer dia y cubrir al menos 20 semanas para que la grilla tenga cuerpo.
-  const start = new Date(first); start.setUTCDate(start.getUTCDate() - ((start.getUTCDay() + 6) % 7));
-  const minEnd = new Date(start); minEnd.setUTCDate(minEnd.getUTCDate() + 20*7 - 1);
-  const end = new Date(Math.max(last, minEnd));
-  const weeks = []; let cur = new Date(start);
-  while (cur <= end) { const wk = []; for (let i = 0; i < 7; i++) { wk.push(new Date(cur)); cur.setUTCDate(cur.getUTCDate() + 1); } weeks.push(wk); }
+  const today = new Date(); today.setUTCHours(0,0,0,0); const todayIso = iso(today);
+  const first = new Date(days[0].date + 'T00:00:00Z');
+  const lastAct = new Date(days[days.length-1].date + 'T00:00:00Z');
+  const end = new Date(Math.max(lastAct, today));
   const tip = (d) => { const a = by.get(d); if (!a) return \`\${d}\\n\${T.noActivity}\`; const parts = [];
     if (a.commits) parts.push(\`\${a.commits} \${T.dayCommits}\`); if (a.artifacts.length) parts.push(\`\${T.dayArt}: \${a.artifacts.map(k => T.kind[k]||k).join(', ')}\`);
     if (a.decisions) parts.push(\`\${a.decisions} \${T.dayDec}\`); if (a.changes) parts.push(\`\${a.changes} \${T.dayChg}\`); if (a.bridge) parts.push(\`\${a.bridge} \${T.dayBridge}\`); if (a.archived) parts.push(\`\${a.archived} \${T.dayArch}\`);
     return \`\${d}\\n\${parts.join('\\n')}\`; };
-  const months = weeks.map((wk, i) => { const d = wk[0]; const prev = i ? weeks[i-1][0] : null; return (!prev || d.getUTCMonth() !== prev.getUTCMonth()) ? \`<span>\${T.months[d.getUTCMonth()]}</span>\` : '<span></span>'; }).join('');
-  const grid = weeks.map(wk => \`<div class="wk">\${wk.map(dt => { const d = iso(dt); const a = by.get(d); const future = dt > today; return \`<i class="l\${a?lvl(total(a)):0} \${d===iso(today)?'today':''} \${future?'off':''}" data-tip="\${esc(tip(d))}"></i>\`; }).join('')}</div>\`).join('');
+  const months = [];
+  for (let y = first.getUTCFullYear(), mo = first.getUTCMonth(); y < end.getUTCFullYear() || (y === end.getUTCFullYear() && mo <= end.getUTCMonth()); mo++) { if (mo > 11) { mo = 0; y++; } months.push([y, mo]); }
+  const blocks = months.map(([y, mo]) => {
+    const firstDay = new Date(Date.UTC(y, mo, 1)); const lead = (firstDay.getUTCDay() + 6) % 7; const n = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate();
+    let active = 0, sum = 0; const cells = [];
+    for (let k = 0; k < lead; k++) cells.push('<i class="off"></i>');
+    for (let d = 1; d <= n; d++) { const dt = new Date(Date.UTC(y, mo, d)); const id = iso(dt); const a = by.get(id); if (a) { active++; sum += total(a); }
+      cells.push(\`<i class="l\${a?lvl(total(a)):0} \${id===todayIso?'today':''} \${dt>today?'future':''}" data-tip="\${esc(tip(id))}">\${d}</i>\`); }
+    return \`<div class="mon"><h5><span>\${T.months[mo]} \${y}</span><small>\${active} \${T.activeDays}</small></h5><div class="dh">\${T.dow.map(d => \`<span>\${d[0]}</span>\`).join('')}</div><div class="dg">\${cells.join('')}</div></div>\`;
+  }).join('');
   const sum = { commits: 0, decisions: 0, changes: 0, archived: 0 }; for (const d of days) { sum.commits += d.commits; sum.decisions += d.decisions; sum.changes += d.changes; sum.archived += d.archived; }
   return \`<section><h2>\${T.work}</h2><p class="hint">\${T.workHint}</p><div class="card">
     <div class="hmsum"><span><b>\${days.length}</b> \${T.activeDays}</span><span>\${T.since} <b>\${esc(m.dates.first)}</b></span>\${sum.commits?\`<span><b>\${sum.commits}</b> \${T.dayCommits}</span>\`:''}<span><b>\${sum.decisions}</b> \${T.dayDec}</span><span><b>\${sum.changes}</b> \${T.dayChg}</span><span><b>\${sum.archived}</b> \${T.dayArch}</span></div>
-    <div class="hm"><div class="dows">\${T.dow.map((d,i) => \`<span>\${i%2===0?d:''}</span>\`).join('')}</div><div class="weeks"><div class="months">\${months}</div><div class="grid">\${grid}</div></div></div>
+    <div class="cal">\${blocks}</div>
     <div class="hmleg">\${T.less} <i></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> \${T.more}</div></div></section>\`;
 }
 

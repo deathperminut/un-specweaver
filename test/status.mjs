@@ -144,7 +144,7 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
     assert.match(html, /cr\('fr'/, 'cadena de anillos clicable');
     assert.match(html, lang === 'es' ? /Cuando se trabajo/ : /When work happened/);
     assert.match(html, /\$\{d\}\\n\$\{parts\.join\('\\n'\)\}/, 'los saltos de linea del tooltip llegan escapados al cliente (un \\n crudo rompia el script)');
-    assert.match(html, /class="hm"/, 'grilla de actividad');
+    assert.match(html, /class="cal"/, 'calendario de actividad');
     assert.match(html, /\\u003c/, 'el JSON embebido escapa < para no cerrar el script');
   }
   fs.rmSync(dir, { recursive: true, force: true });
