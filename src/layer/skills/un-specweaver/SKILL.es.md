@@ -60,6 +60,7 @@ Antes de buscar algo, sabe donde vive. No dupliques entre capas.
 | Intencion de producto (el *que* de negocio) | `_bmad-output/` (PRD, epics) | los specs |
 | Contrato de comportamiento (el *que* tecnico) | `openspec/specs/` | el PRD |
 | Decisiones y rationale (el *por que*) | Engram **si existe**, si no `design.md` | los docs |
+| Historia de un requisito (que cambio y por que) | `.memlog.md` de BMAD + `sprint-change-proposal-*.md` + `changelog.jsonl`, via `un-specweaver history <FR>` | la memoria del agente |
 | Estructura del codigo (el *donde*) | grafo de graphify **si existe** | leyendo archivos a ciegas |
 | Trazabilidad FR ↔ story ↔ change | `.un-specweaver/trace.json` | ningun otro lado |
 | Arquitectura de la organizacion | `docs/architecture-base.md` | inventarla |

@@ -16,6 +16,7 @@ USO
   npx un-specweaver doctor [dir]      revisa salud, pasos pendientes y drift de vendors
   npx un-specweaver bridge <epics.md> convierte stories de BMAD en changes de OpenSpec
   npx un-specweaver context        lista los artefactos de planeacion a cargar
+  npx un-specweaver history [FR-21] historial de decisiones por requisito, o ranking de los que mas cambian
   npx un-specweaver vendors           muestra las versiones pineadas
 
 INIT
@@ -111,6 +112,34 @@ switch (cmd) {
       if (a.kind !== last) { console.log(`  ${a.kind}  (${a.what})`); last = a.kind; }
       console.log(`    ${path.relative(root, a.file)}`);
     }
+    console.log('');
+    process.exit(0);
+  }
+
+  case 'history': {
+    // Las decisiones que BMAD registro en las conversaciones (.memlog.md, sprint-change-proposal)
+    // y lo que hizo el puente (changelog.jsonl), por requisito. Vista derivada: no guarda nada.
+    const { planningRoot } = await import('../bridge/cli.mjs');
+    const { requirementHistory, instabilityRanking, collectDecisions } = await import('../bridge/decisions.mjs');
+    const root = path.resolve(process.cwd());
+    const pr = planningRoot(root);
+    let trace = null;
+    try { trace = JSON.parse((await import('node:fs')).readFileSync(path.join(root, '.un-specweaver', 'trace.json'), 'utf8')); } catch { /* sin puente aun */ }
+    const id = o._[0];
+    if (!id) {
+      const { sources, entries } = collectDecisions(root, pr);
+      if (!sources.length) { console.log('\nNo hay memlogs ni propuestas de cambio todavia. Aparecen con /sw:new (BMAD los escribe al conversar).\n'); process.exit(0); }
+      console.log(`\n${entries.length} decision(es) en ${sources.length} fuente(s). Requisitos que mas han cambiado despues de nacer:\n`);
+      const rows = instabilityRanking(root, pr, trace);
+      if (!rows.length) console.log('  (ninguna entrada cita un requisito por id)');
+      for (const r of rows.slice(0, 15)) console.log(`  ${r.id.padEnd(9)} ${String(r.changes).padStart(2)} cambio(s)  ${String(r.mentions).padStart(2)} mencion(es)  ${r.stories.length ? `stories ${r.stories.join(', ')}` : ''}${r.last ? `  ultimo ${r.last}` : ''}`);
+      console.log('\n  npx un-specweaver history <id> para ver el detalle de uno.\n');
+      process.exit(0);
+    }
+    const h = requirementHistory(root, pr, id, trace);
+    if (!h.events.length) { console.log(`\n${id}: sin decisiones registradas que lo citen${h.stories.length ? ` (lo cubren las stories ${h.stories.join(', ')})` : ''}.\n`); process.exit(0); }
+    console.log(`\n${h.id} — ${h.changes} cambio(s) en ${h.events.length} evento(s)${h.stories.length ? `; stories ${h.stories.join(', ')}` : ''}\n`);
+    for (const e of h.events) console.log(`  ${(e.when || '????-??-??').padEnd(10)} ${e.source.padEnd(22)} (${e.type}) ${e.text}\n             ${e.file}`);
     console.log('');
     process.exit(0);
   }

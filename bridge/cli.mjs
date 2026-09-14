@@ -17,6 +17,7 @@ import { parseEpics } from './parse-epics.mjs';
 import { emitChange, capabilityPath, changeId, detectLang } from './emit-openspec.mjs';
 import { planSprint, renderSprintPlan } from './plan-sprint.mjs';
 import { mergeTrace, mergeTasks, readMainSpec, normalizeName, archivedRevisions, appendLedger, sha256 } from './history.mjs';
+import { findDecisionSources } from './decisions.mjs';
 
 // BMAD escribe epics.md en {planning_artifacts}, que es configurable (--set bmm.planning_artifacts).
 // Hardcodear la ruta fue un error: en una instalacion real quedo en
@@ -60,6 +61,11 @@ export function findPlanningArtifacts(root) {
   }
   const epics = findEpics(root);
   for (const f of epics) out.push({ kind: 'epics', what: 'stories y criterios — fuente de los changes', file: f });
+  // Las decisiones tomadas al conversar. Antes se excluian a proposito y /sw:change podia
+  // proponer algo ya descartado con motivo verificado.
+  for (const d of findDecisionSources(root, base)) {
+    out.push({ kind: 'decisions', what: 'decisiones, cambios y descartes registrados al conversar — `un-specweaver history <FR>` los cruza', file: d.file });
+  }
   return out;
 }
 

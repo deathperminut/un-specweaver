@@ -13,7 +13,21 @@ The requirement comes in `$ARGUMENTS`. If empty, ask for it before doing anythin
 
 ## Step 1 — Scope control (before touching a single file)
 
-Read `.un-specweaver/trace.json` and `_bmad-output/prd.md`. Classify the requirement as exactly **one** of:
+Read `.un-specweaver/trace.json` and the PRD. And before classifying, **look at the history of
+the requirement it touches**:
+
+```
+npx un-specweaver history            # ranking: which requirements changed most, and how much
+npx un-specweaver history FR-21      # everything decided, changed or discarded about that FR
+```
+
+It crosses the `.memlog.md` files BMAD writes while conversing (decisions, changes, discards with
+their reason), the `sprint-change-proposal-*.md` files and the bridge history. If what is being
+asked **was already discarded**, say so with the entry and its reason before reopening it:
+reopening a decision without knowing it existed is the most expensive way to lose time. An FR with
+many changes is an FR nobody understands the same way; if that is the case, say so too.
+
+Classify the requirement as exactly **one** of:
 
 | Classification | How to recognize it | What follows |
 |---|---|---|

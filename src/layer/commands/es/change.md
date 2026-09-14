@@ -13,7 +13,21 @@ El requerimiento viene en `$ARGUMENTS`. Si viene vacio, pidelo antes de hacer na
 
 ## Paso 1 — Control de alcance (antes de tocar un solo archivo)
 
-Lee `.un-specweaver/trace.json` y `_bmad-output/prd.md`. Clasifica el requerimiento en **una** de tres:
+Lee `.un-specweaver/trace.json` y el PRD. Y antes de clasificar, **mira la historia del requisito
+que toca**:
+
+```
+npx un-specweaver history            # ranking: que requisitos han cambiado mas, y cuanto
+npx un-specweaver history FR-21      # todo lo que se decidio, cambio o descarto sobre ese FR
+```
+
+Cruza los `.memlog.md` que BMAD escribe al conversar (decisiones, cambios, descartes con motivo),
+las `sprint-change-proposal-*.md` y el historial del puente. Si lo que te piden **ya se descarto**,
+dilo con la entrada y su motivo antes de reabrirlo: reabrir una decision sin saber que existio es
+la forma mas cara de perder tiempo. Un FR con muchos cambios es un FR que nadie entiende igual;
+si es el caso, dilo tambien.
+
+Clasifica el requerimiento en **una** de tres:
 
 | Clasificacion | Como se reconoce | Que sigue |
 |---|---|---|

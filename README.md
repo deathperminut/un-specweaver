@@ -331,12 +331,22 @@ npx un-specweaver init [dir]          # monta el entorno completo
 npx un-specweaver doctor [dir]        # salud, pasos pendientes y drift de vendors
 npx un-specweaver bridge <epics.md>   # stories de BMAD -> changes de OpenSpec
 npx un-specweaver context [dir]       # artefactos de planeacion, en sus rutas reales
+npx un-specweaver history [FR-21]     # historia de un requisito, o ranking de los que mas cambian
 npx un-specweaver vendors             # versiones pineadas
 ```
 
 `context` existe porque BMAD escribe en rutas fechadas y configurables (`{planning_artifacts}`).
 Lista brief, PRD, arquitectura, UX y `epics.md` donde de verdad quedaron, para que `/sw:build`
-los cargue en vez de adivinarlos.
+los cargue en vez de adivinarlos. Tambien lista los `.memlog.md` y las `sprint-change-proposal-*.md`.
+
+`history` cruza tres fuentes que ya existian y nadie leia junto: los **`.memlog.md`** que BMAD
+escribe al conversar (cada artefacto lleva el suyo, con entradas `(decision)`, `(change)`,
+`(override)`, `(assumption)`… y el motivo escrito), las **propuestas de cambio de sprint** de
+`bmad-correct-course` (tablas de impacto por FR), y el **`changelog.jsonl`** del puente. Sin
+argumento, un ranking de los requisitos que mas han cambiado despues de nacer; con un id, la
+linea de tiempo completa con archivo y motivo. Es una vista: no guarda nada. En un proyecto real
+(150 entradas, 34 ids citados) el primero del ranking era un FR con un `(override)` que decia
+exactamente por que se descarto lo que el asistente habia sugerido — y `/sw:change` no lo veia.
 
 `init` acepta `--agents`, `--lang es|en`, `--dry-run`, `--yes`, `--force`, `--prune-extra`,
 `--only`, `--skip`, `--keep-going`.
@@ -543,12 +553,13 @@ Una sola duena por dato:
 | Decisiones y rationale (el *por que*) | Engram |
 | Estructura del codigo (el *donde*) | grafo de graphify |
 | Trazabilidad FR ↔ story ↔ change | `.un-specweaver/trace.json` |
+| Historia de un requisito (que cambio y por que) | `.memlog.md` + `sprint-change-proposal-*.md` + `changelog.jsonl`, via `history` |
 | Arquitectura de la organizacion | `docs/architecture-base.md` |
 
 ## Desarrollo
 
 ```bash
-npm test                    # 130 tests
+npm test                    # 137 tests
 npm pack                    # ~23 kB
 node bin/un-specweaver.mjs init --dry-run
 ```

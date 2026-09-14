@@ -60,6 +60,7 @@ Before looking for something, know where it lives. Do not duplicate across layer
 | Product intent (the business *what*) | `_bmad-output/` (PRD, epics) | the specs |
 | Behavior contract (the technical *what*) | `openspec/specs/` | the PRD |
 | Decisions and rationale (the *why*) | Engram **if present**, else `design.md` | the docs |
+| History of a requirement (what changed and why) | BMAD `.memlog.md` + `sprint-change-proposal-*.md` + `changelog.jsonl`, via `un-specweaver history <FR>` | the agent's memory |
 | Code structure (the *where*) | graphify graph **if present** | reading files blind |
 | Traceability FR ↔ story ↔ change | `.un-specweaver/trace.json` | anywhere else |
 | Organization architecture | `docs/architecture-base.md` | inventing it |

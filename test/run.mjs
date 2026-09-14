@@ -7,7 +7,8 @@ import { execFileSync } from 'node:child_process';
 import { parseEpics, slug } from '../bridge/parse-epics.mjs';
 import { emitChange, changeId, capabilityPath, normalizePerson, detectLang, langScores } from '../bridge/emit-openspec.mjs';
 import { planSprint } from '../bridge/plan-sprint.mjs';
-import { findEpics } from '../bridge/cli.mjs';
+import { findEpics, findPlanningArtifacts } from '../bridge/cli.mjs';
+import { parseMemlog, parseChangeProposal, extractRefs, collectDecisions, requirementHistory, instabilityRanking } from '../bridge/decisions.mjs';
 import { mergeTrace, mergeTasks, readMainSpec, reconcileScenarioNames, archivedRevisions, revisedId, readLedger } from '../bridge/history.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
@@ -484,5 +485,93 @@ test('cada corrida del puente deja una linea en el ledger; el dry-run no', () =>
   assert.deepEqual(led[1].options.only, ['2.1']);
   assert.equal(led[1].changes[0].action, 'skipped');
   assert.equal(led[0].sourceHash, led[1].sourceHash, 'mismo epics.md, mismo hash');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+// --- decisiones: lo que BMAD registro al conversar ------------------------------------------
+
+const PLANNING = path.join(ROOT, 'fixtures', 'planning-artifacts');
+const withPlanning = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dec-'));
+  fs.cpSync(PLANNING, path.join(dir, '_bmad-output', 'planning-artifacts'), { recursive: true });
+  return dir;
+};
+
+test('parseMemlog lee frontmatter, entradas tipadas, texto envuelto y tipos desconocidos', () => {
+  const md = fs.readFileSync(path.join(PLANNING, 'prds', 'prd-portal-2026-09-01', '.memlog.md'), 'utf8');
+  const m = parseMemlog(md);
+  assert.equal(m.meta.updated, '2026-09-01T10:15');
+  assert.deepEqual(m.entries.map((e) => e.type), ['event', 'decision', 'decision', 'assumption', 'change', 'override', 'question']);
+  assert.match(m.entries[1].text, /nadie puede auditar$/, 'la linea envuelta se pega a la entrada');
+  assert.deepEqual(m.entries[4].refs, ['FR001']);
+  assert.equal(m.entries[6].type, 'question', 'un tipo no documentado se conserva');
+});
+
+test('extractRefs conserva la forma literal y deduplica por clave', () => {
+  assert.deepEqual(extractRefs('FR-21 y FR21 son lo mismo; UX-DR4, AD-9, la Story 1.2 y el Epic 3'), ['FR-21', 'UX-DR4', 'AD-9', 'Story 1.2', 'Epic 3']);
+  assert.deepEqual(extractRefs('Node 22.12 no es una story'), []);
+});
+
+test('parseChangeProposal saca una entrada por fila de tabla que cite un id', () => {
+  const md = fs.readFileSync(path.join(PLANNING, 'sprint-change-proposal-2026-09-05.md'), 'utf8');
+  const p = parseChangeProposal(md);
+  assert.equal(p.entries.length, 3, 'el pedido 3 (Epic nuevo, sin id) y la fila sin cambios no cuentan');
+  assert.deepEqual(p.entries[0].refs, ['FR001']);
+  assert.match(p.entries[0].text, /Dentro del alcance/);
+  assert.deepEqual(p.entries[2].refs, ['FR001', 'FR002']);
+});
+
+test('la historia de un requisito cruza memlogs, propuestas y puente, en orden', () => {
+  const dir = withPlanning();
+  const pr = path.join(dir, '_bmad-output', 'planning-artifacts');
+  const c = collectDecisions(dir, pr);
+  assert.equal(c.sources.length, 3);
+  assert.equal(c.entries.length, 12);
+
+  const h = requirementHistory(dir, pr, 'fr-001');           // clave tolerante
+  assert.equal(h.events.length, 5);
+  assert.deepEqual(h.events.map((e) => e.type), ['decision', 'change', 'override', 'change', 'change']);
+  assert.equal(h.changes, 4);
+  assert.ok(h.events.every((e, i, a) => i === 0 || a[i - 1].when <= e.when), 'cronologico');
+  assert.match(h.events[2].text, /Descartado permitir registro con Gmail/, 'el descarte con motivo esta ahi');
+
+  // Con trace.json y ledger, aparecen las corridas del puente sobre las stories que lo cubren.
+  fs.copyFileSync(FIXTURE, path.join(dir, 'epics.md'));
+  fs.mkdirSync(path.join(dir, 'openspec', 'changes'), { recursive: true });
+  execFileSync('node', [CLI_BRIDGE, 'epics.md'], { cwd: dir, stdio: 'pipe' });
+  const trace = readTrace(dir);
+  const h2 = requirementHistory(dir, pr, 'FR001', trace);
+  assert.deepEqual(h2.stories, ['1.1']);
+  assert.ok(h2.events.some((e) => e.source === 'bridge' && /Story 1\.1/.test(e.text)));
+
+  const rank = instabilityRanking(dir, pr, trace);
+  assert.equal(rank[0].id, 'FR001');
+  assert.ok(rank.every((r) => !/^(Story|Epic)/.test(r.id)), 'stories y epics no son requisitos');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('context lista los memlogs y las propuestas de cambio: antes se excluian', () => {
+  const dir = withPlanning();
+  const found = findPlanningArtifacts(dir);
+  const dec = found.filter((a) => a.kind === 'decisions');
+  assert.equal(dec.length, 3);
+  assert.ok(dec.some((a) => a.file.endsWith('.memlog.md')));
+  assert.ok(dec.some((a) => /sprint-change-proposal/.test(a.file)));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('history desde el CLI: ranking sin argumento, linea de tiempo con id, y sin datos no explota', () => {
+  const cli = (dir, ...args) => execFileSync('node', [path.join(ROOT, 'bin', 'un-specweaver.mjs'), 'history', ...args], { cwd: dir, stdio: 'pipe' }).toString();
+  const empty = fs.mkdtempSync(path.join(os.tmpdir(), 'dec-'));
+  assert.match(cli(empty), /No hay memlogs/);
+  fs.rmSync(empty, { recursive: true, force: true });
+
+  const dir = withPlanning();
+  const rank = cli(dir);
+  assert.match(rank, /FR001\s+4 cambio/);
+  const one = cli(dir, 'FR001');
+  assert.match(one, /FR001 — 4 cambio\(s\) en 5 evento\(s\)/);
+  assert.match(one, /\(override\) Descartado/);
+  assert.match(cli(dir, 'FR999'), /sin decisiones registradas/);
   fs.rmSync(dir, { recursive: true, force: true });
 });

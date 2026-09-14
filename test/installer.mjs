@@ -1059,6 +1059,18 @@ test('graphify no es una preferencia: ningun comando la consulta ni init la preg
   }
 });
 
+test('/sw:change consulta la historia del requisito antes de clasificar', () => {
+  // Caso real: 150 entradas de memlog, un (override) con el motivo exacto de un descarte, y el
+  // comando no lo veia. Reabrir una decision sin saber que existio es lo que esto evita.
+  for (const lang of ['es', 'en']) {
+    const src = fs.readFileSync(path.join(LAYER, 'commands', lang, 'change.md'), 'utf8');
+    assert.match(src, /un-specweaver history/, `${lang}: debe consultar la historia`);
+    assert.ok(src.indexOf('un-specweaver history') < src.indexOf(lang === 'es' ? 'Clasifica el requerimiento' : 'Classify the requirement'), `${lang}: antes de clasificar`);
+    const skill = fs.readFileSync(path.join(LAYER, 'skills', 'un-specweaver', `SKILL.${lang}.md`), 'utf8');
+    assert.match(skill, /memlog/, `SKILL.${lang}: la tabla de fuentes debe nombrar el memlog`);
+  }
+});
+
 test('los comandos declaran que la memoria es por proyecto y prohiben cruzarla por defecto', () => {
   // El riesgo es el agente leyendo memoria de OTRO proyecto como si fuera de este:
   // una alucinacion con fuente. Se dice en los comandos que guardan y en la skill.
