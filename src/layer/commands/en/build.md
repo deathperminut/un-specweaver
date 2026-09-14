@@ -118,6 +118,8 @@ Offer them at close; do not impose them.
    why; `doctor` keeps flagging it until it is closed
 5. The graphify hook rebuilds the graph on commit. If you have not committed yet, run `graphify update .`
    so the next change sees the new code
+6. `/sw:status` (or `npx un-specweaver status --open`) to see what is done and what is next: the
+   current wave, what can start now, and whether anything was finished but not closed
 
 ## Decision memory (Engram)
 

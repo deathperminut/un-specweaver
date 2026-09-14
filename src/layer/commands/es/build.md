@@ -118,6 +118,8 @@ Ofrecelas al cerrar, no las impongas.
    seguir marcando hasta que se cierre
 5. El hook de graphify reconstruye el grafo al commitear. Si no commiteaste todavia, `graphify update .`
    para que el siguiente change vea el codigo nuevo
+6. `/sw:status` (o `npx un-specweaver status --open`) para ver que quedo y que sigue: la ola
+   actual, que se puede empezar ya, y si algo quedo terminado sin cerrar
 
 ## Memoria de decisiones (Engram)
 
