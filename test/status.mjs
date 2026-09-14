@@ -69,6 +69,12 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.deepEqual(fr1.stories, ['1.1']);
   assert.equal(fr1.changes, 4);
   assert.deepEqual(s.requirements.orphans, []);
+
+  // La cobertura sale de epics.md, no del trace: un trace danado no puede decir "sin story".
+  fs.writeFileSync(path.join(dir, '.un-specweaver', 'trace.json'), JSON.stringify({ ...JSON.parse(fs.readFileSync(path.join(dir, '.un-specweaver', 'trace.json'), 'utf8')), changes: [] }));
+  const s3 = collectStatus(dir);
+  assert.deepEqual(s3.requirements.rows.find((r) => r.id === 'FR001').stories, ['1.1']);
+  assert.equal(s3.metrics.requirements.coveragePct, 100);
   assert.equal(s.decisions.total, 12);
   assert.equal(s.decisions.ranking[0].id, 'FR001');
 

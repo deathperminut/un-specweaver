@@ -254,7 +254,7 @@ function header(){
 }
 
 // ---- glosario ----------------------------------------------------------------
-const glossary = () => \`<details class="gloss"><summary><b>\${T.glossary}</b> — \${T.glossaryHint}</summary><div class="gloss-grid">\${T.gloss.map(([k,v]) => \`<div><b>\${esc(k)}</b>\${esc(v)}</div>\`).join('')}</div></details>\`;
+const glossary = () => \`<details class="gloss" open><summary><b>\${T.glossary}</b> — \${T.glossaryHint}</summary><div class="gloss-grid">\${T.gloss.map(([k,v]) => \`<div><b>\${esc(k)}</b>\${esc(v)}</div>\`).join('')}</div></details>\`;
 
 // ---- hero ------------------------------------------------------------------
 function hero(){

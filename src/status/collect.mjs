@@ -119,15 +119,16 @@ export function phases(root, artifacts, trace, changes) {
 }
 
 // Requisitos con cobertura (trace) e inestabilidad (decisiones).
-export function requirementsView(root, pr, trace) {
+export function requirementsView(root, pr, trace, epics = []) {
   if (!trace) return { rows: [], orphans: [] };
   const rank = new Map(instabilityRanking(root, pr, trace).map((r) => [refKey(r.id), r]));
+  // La cobertura se lee de epics.md (el FR Coverage Map de BMAD), que es la fuente; trace.json
+  // es derivado y puede estar incompleto. Caso real: un trace danado por el bug de --only
+  // mostraba 2/34 FR cubiertos cuando epics.md decia 32/34.
   const covered = new Map();
-  for (const c of trace.changes || []) for (const r of c.requirements || []) {
-    const k = refKey(r);
-    if (!covered.has(k)) covered.set(k, []);
-    covered.get(k).push(c.bmad.story);
-  }
+  const add = (r, story) => { const k = refKey(r); if (!covered.has(k)) covered.set(k, []); covered.get(k).push(story); };
+  for (const e of epics) for (const st of e.stories) for (const r of st.requirements || []) add(r, st.id);
+  for (const c of trace.changes || []) for (const r of c.requirements || []) add(r, c.bmad.story);
   const groups = [['functional', 'FR'], ['nonFunctional', 'NFR'], ['ux', 'UX-DR'], ['additional', 'ADD']];
   const rows = [];
   for (const [g, label] of groups) {
@@ -268,7 +269,7 @@ export function collectStatus(root) {
   const graph = g.graph ? readJson(path.join(root, g.graph)) : null;
   const e = detectEngram(root);
   const epics = epicsTree(root);
-  const requirements = requirementsView(root, pr, trace);
+  const requirements = requirementsView(root, pr, trace, epics);
   const sprint = sprintStatus(root, changes);
   const ledger = readLedger(root);
   const tl = timeline(root, pr, changes);
