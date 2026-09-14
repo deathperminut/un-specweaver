@@ -1125,10 +1125,40 @@ test('los agentes elegidos quedan guardados y no se re-detectan', async () => {
 
 test('reinstalar respeta los agentes guardados en vez de volver a detectar', () => {
   const root = tmp();
-  writeState(root, { version: 1, preferences: { ...DEFAULTS, agents: ['claude-code'] }, agents: ['claude-code'] });
+  writeState(root, { preferences: { ...DEFAULTS, agents: ['claude-code'] }, agents: ['claude-code'] });
   const stored = readState(root);
   assert.deepEqual(stored.preferences.agents, ['claude-code'],
-    'la eleccion de agentes es una preferencia, no un resultado de deteccion');
+    'la eleccion de agentes se recuerda por maquina');
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('config.json es del proyecto y local.json de la maquina: lo que cambia por compañero no va al repo', () => {
+  // Señalado en revision de codigo: un PR traia el config.json con la ruta del binario de
+  // engram de OTRA maquina, sus agentes y el resultado de sus pasos. Un diff por compañero.
+  const root = tmp();
+  writeState(root, {
+    installedAt: '2026-09-14T00:00:00Z', preferences: { lang: 'en', agents: ['opencode'] }, pruneExtra: true,
+    agents: ['opencode'], vendors: { bmad: 'x' }, optional: { engram: { bin: '/home/carlos/.local/bin/engram' } },
+    steps: [{ id: 'bmad', ok: true }],
+  });
+  const config = JSON.parse(fs.readFileSync(path.join(root, '.un-specweaver', 'config.json'), 'utf8'));
+  const local = JSON.parse(fs.readFileSync(path.join(root, '.un-specweaver', 'local.json'), 'utf8'));
+  assert.deepEqual(config, { version: 2, preferences: { lang: 'en' }, pruneExtra: true }, 'solo decisiones del proyecto');
+  assert.deepEqual(Object.keys(local).sort(), ['agents', 'installedAt', 'optional', 'steps', 'vendors']);
+  assert.doesNotMatch(JSON.stringify(config), /carlos|opencode|installedAt/, 'nada de la maquina en el repo');
+
+  // Leer devuelve lo de siempre, fusionado.
+  const st = readState(root);
+  assert.equal(st.preferences.lang, 'en'); assert.deepEqual(st.preferences.agents, ['opencode']); assert.equal(st.vendors.bmad, 'x');
+
+  // Un config.json de 0.x con todo junto se sigue leyendo; el proximo init lo separa.
+  fs.rmSync(path.join(root, '.un-specweaver', 'local.json'));
+  fs.writeFileSync(path.join(root, '.un-specweaver', 'config.json'), JSON.stringify({ version: 1, lang: 'es', preferences: { lang: 'es', agents: ['claude-code'] }, agents: ['claude-code'], vendors: { bmad: 'y' } }));
+  const old = readState(root);
+  assert.equal(old.preferences.lang, 'es'); assert.deepEqual(old.preferences.agents, ['claude-code']); assert.equal(old.vendors.bmad, 'y');
+
+  assert.ok(gitignoreBlock([]).includes('.un-specweaver/local.json'), 'local.json se ignora');
+  assert.ok(!gitignoreBlock([]).includes('.un-specweaver/config.json'), 'config.json va al repo');
   fs.rmSync(root, { recursive: true, force: true });
 });
 

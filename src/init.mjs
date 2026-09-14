@@ -92,10 +92,9 @@ export async function init(opts) {
 
   if (!opts.dryRun) {
     writeState(root, {
-      version: 1,
       installedAt: new Date().toISOString(),
-      lang,
       preferences: prefs,
+      pruneExtra: !!opts.pruneExtra,
       agents: agents.map((a) => a.id),
       // Se registra lo que quedo instalado de verdad, no lo que se pretendia instalar:
       // un estado optimista hace que doctor reporte "ok" sobre algo que no existe.

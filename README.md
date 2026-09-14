@@ -240,7 +240,8 @@ detecta tu gestor de paquetes. Va a pedir confirmacion antes de ejecutar el scri
 
 ### Las dos preguntas de `init`
 
-Se hacen **una sola vez** y quedan en `.un-specweaver/config.json`:
+Se hacen **una sola vez**. El idioma queda en `.un-specweaver/config.json` (del proyecto, va al repo);
+los agentes en `.un-specweaver/local.json` (de tu maquina, ignorado — cada compañero elige los suyos):
 
 | Pregunta | Opciones | Recomendado |
 |---|---|---|
@@ -453,7 +454,8 @@ reemplaza en vez de duplicarlo). En un proyecto real la diferencia es de **499 a
 | `openspec/` — los specs son el producto | `_bmad/`, `node_modules/` |
 | `_bmad-output/` — PRD y epics | `.claude/skills/bmad-*/`, `.agents/skills/bmad-*/` |
 | `docs/architecture-base.md` | `.claude/commands/sw/`, `.opencode/commands/sw-*.md` |
-| `.un-specweaver/` — config, trazabilidad, ledger | skills y comandos de OpenSpec; `.un-specweaver/dashboard.html` |
+| `.un-specweaver/config.json` (idioma), `trace.json`, `sprint-plan.md`, `changelog.jsonl` | `.un-specweaver/local.json` — agentes, rutas y pasos de **esta** maquina |
+| | `.un-specweaver/dashboard.html` — regenerable |
 | `.engram/config.json` — nombre del proyecto en Engram | `graphify-out/` — AST regenerable; el hook lo reescribe en cada commit |
 | `.graphifyignore` — el alcance del grafo es regla del equipo | `.claude/skills/graphify/`, `.opencode/skills/graphify/` |
 
@@ -594,7 +596,7 @@ Una sola duena por dato:
 ## Desarrollo
 
 ```bash
-npm test                    # 149 tests
+npm test                    # 150 tests
 npm pack                    # ~23 kB
 node bin/un-specweaver.mjs init --dry-run
 ```

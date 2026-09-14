@@ -84,7 +84,7 @@ would otherwise assume.
 `.un-specweaver/config.json` stores what the user chose at init time:
 
 ```json
-"preferences": { "lang": "es", "agents": ["claude-code", "opencode"] }
+"preferences": { "lang": "es" }
 ```
 
 **Read them before deciding on your own.** Never ask about these in conversation: they are

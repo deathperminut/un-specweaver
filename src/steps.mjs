@@ -112,6 +112,8 @@ export function gitignoreBlock(_agentsIgnored) {
                  `${VENDORS.graphify.outDir}/`,
                  // Vista derivada de `status --html`: se regenera, no se versiona.
                  '.un-specweaver/dashboard.html',
+                 // Estado de ESTA maquina (agentes, rutas, pasos): un diff por compañero si se commitea.
+                 '.un-specweaver/local.json',
                  ...VENDORS.gentle.generatedProjectDirs.map((d) => `${d}/`), ''];
   // Cada vendor escribe en sitios distintos. OpenSpec ademas crea <dir-del-agente>/skills/,
   // que no aparece en la config porque BMAD manda las skills de OpenCode a .agents/skills.

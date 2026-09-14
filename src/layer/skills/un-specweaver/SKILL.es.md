@@ -86,7 +86,7 @@ cualquier default que asumirias.
 `.un-specweaver/config.json` guarda lo que el usuario eligio al inicializar:
 
 ```json
-"preferences": { "lang": "es", "agents": ["claude-code", "opencode"] }
+"preferences": { "lang": "es" }
 ```
 
 **Leelas antes de decidir por tu cuenta.** Nunca preguntes estas cosas en una conversacion: ya
