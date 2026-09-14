@@ -280,6 +280,9 @@ export function metrics({ artifacts, epics, requirements, changes, decisions, le
     requirements: { fr: fr.length, nfr: requirements.rows.filter((r) => r.group === 'NFR').length, ux: requirements.rows.filter((r) => r.group === 'UX-DR').length, total: requirements.rows.length,
       covered: fr.filter((r) => r.stories.length).length, coveragePct: fr.length ? Math.round((fr.filter((r) => r.stories.length).length / fr.length) * 100) : null,
       done: fr.filter((r) => r.done).length, donePct: fr.length ? Math.round((fr.filter((r) => r.done).length / fr.length) * 100) : null, removed,
+      // NFR y UX-DR con la misma regla: completo cuando todas las stories que lo cubren terminaron.
+      nfrDone: requirements.rows.filter((r) => r.group === 'NFR' && r.done).length, uxDone: requirements.rows.filter((r) => r.group === 'UX-DR' && r.done).length,
+      nfrCovered: requirements.rows.filter((r) => r.group === 'NFR' && r.stories.length).length, uxCovered: requirements.rows.filter((r) => r.group === 'UX-DR' && r.stories.length).length,
       unstable: requirements.rows.filter((r) => r.changes >= 2).length },
     epics: epics.length, stories: stories.length, scenarios,
     storiesDone: closedStories.size, storiesInProgress: inProgress.size,

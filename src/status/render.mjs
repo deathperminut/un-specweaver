@@ -95,7 +95,7 @@ const UI = {
     alertUnstable: 'requisitos inestables', alertHint: 'han cambiado 2 o mas veces despues de nacer — click para ver cuales y por que',
     alertNone: 'ningun requisito inestable', alertWhy: 'Un requisito que cambia varias veces es un requisito que el equipo no entiende igual. Cada cambio arrastra stories, specs y codigo ya hecho. Antes de tocar uno de estos, lee su historial y confirma con quien lo pidio.',
     tabDone: 'Completados', tabPending: 'Pendientes', canvasFR: 'Requisitos funcionales', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tareas', canvasUnstable: 'Requisitos inestables',
-    frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
+    withStory: 'con story', nfrNoStory: 'ninguna story lo cita: se cumple transversalmente o falta mapearlo', frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
     work: 'Cuando se trabajo', workHint: 'cada celda es un dia; el color, cuanta actividad quedo registrada: commits, decisiones, cambios, specs cerradas. Pasa el cursor para ver el detalle.',
     dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', dayCommits: 'commits', gap: 'dias sin registro', activeDays: 'dias con actividad', less: 'menos', more: 'mas', dow: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'], months: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'], noActivity: 'sin actividad registrada', since: 'desde',
     memory: 'Memoria del proyecto', tabHistory: 'Historial paso a paso', tabKey: 'Decisiones clave', tabImpacts: 'Cambios e impacto', tabStats: 'Por etapa',
@@ -142,7 +142,7 @@ const UI = {
     alertUnstable: 'unstable requirements', alertHint: 'changed 2 or more times after birth — click to see which and why',
     alertNone: 'no unstable requirements', alertWhy: 'A requirement that changes several times is one the team does not understand the same way. Each change drags stories, specs and code already done. Before touching one of these, read its history and confirm with whoever asked for it.',
     tabDone: 'Completed', tabPending: 'Pending', canvasFR: 'Functional requirements', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tasks', canvasUnstable: 'Unstable requirements',
-    frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
+    withStory: 'with a story', nfrNoStory: 'no story cites it: met transversally, or still to be mapped', frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
     work: 'When work happened', workHint: 'each cell is a day; the color, how much recorded activity: commits, decisions, changes, specs closed. Hover for the detail.',
     dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', dayCommits: 'commits', gap: 'days without records', activeDays: 'active days', less: 'less', more: 'more', dow: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], noActivity: 'no recorded activity', since: 'since',
     memory: 'Project memory', tabHistory: 'Step-by-step history', tabKey: 'Key decisions', tabImpacts: 'Changes and impact', tabStats: 'Per stage',
@@ -252,7 +252,8 @@ svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z
 .drawer h3{font-size:16px;margin:0 0 12px;line-height:1.35}.drawer h5{margin:16px 0 6px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}.drawer .ac{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px}.drawer .ac b{color:var(--acc);font-weight:500;margin-right:4px}
 .drawer .row{display:flex;gap:6px;flex-wrap:wrap}.drawer .link{cursor:pointer}.drawer .link:hover{border-color:var(--acc);color:var(--acc)}
 .chain{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:4px 0}.cring{flex:1;min-width:170px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;position:relative;transition:border-color .15s}.cring:hover{border-color:var(--acc)}
-.cring+.cring{margin-left:26px}.cring+.cring::before{content:'→';position:absolute;left:-22px;top:46%;color:var(--dim);font-size:18px}.cring svg{width:110px;height:110px}.cring .l{font-size:12.5px;color:var(--fg)}.cring .s{font-size:11.5px;color:var(--muted)}
+.chain>*+*{margin-left:26px;position:relative}.chain>*+*::before{content:'→';position:absolute;left:-22px;top:46%;color:var(--dim);font-size:18px}
+.cstack{display:flex;flex-direction:column;gap:6px;flex:1;min-width:190px}.cstack .cring{min-width:0}.cring.sm{flex-direction:row;justify-content:flex-start;gap:10px;padding:6px 12px}.cring.sm svg{width:44px;height:44px}.cring.sm .l{font-size:12px}.cring.sm .s{font-size:11px}.cring svg{width:110px;height:110px}.cring .l{font-size:12.5px;color:var(--fg)}.cring .s{font-size:11.5px;color:var(--muted)}
 .hero2 .alert{margin-top:12px}@media(max-width:760px){.hero2{grid-template-columns:1fr!important}}.alert{display:flex;align-items:center;gap:12px;background:var(--warn-soft);border:1px solid rgba(250,178,25,.45);border-radius:10px;padding:10px 14px;margin-top:12px;cursor:pointer}.alert.ok{background:var(--good-soft);border-color:rgba(74,222,128,.35);cursor:default}.alert b{font-size:20px;color:var(--warn)}.alert.ok b{color:var(--good)}.alert .t{flex:1}.alert small{color:var(--muted)}
 .canvas{position:fixed;inset:0;background:var(--bg);z-index:40;display:none;flex-direction:column}.canvas.open{display:flex}.canvas .ch{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line)}.canvas .ch h3{margin:0;font-size:16px}.canvas .ch .sp{flex:1}
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);padding:0 20px}.tab{padding:10px 14px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;font-size:13px}.tab.on{color:var(--fg);border-color:var(--acc)}.tab b{font-family:var(--mono);font-weight:500;margin-left:6px;color:var(--acc)}
@@ -297,7 +298,7 @@ const storyById = new Map(stories.map(s => [s.id, s]));
 const specByStory = new Map(); for (const c of M.changes) { const cur = specByStory.get(c.story); if (!cur || c.revision > cur.revision || (c.revision===cur.revision && c.state==='archived')) specByStory.set(c.story, c); }
 // requisito -> stories (desde epics.md, que trae el coverage map; no depende del trace)
 const storiesByReq = new Map(); for (const s of stories) for (const r of s.requirements||[]) { const k = key(r); if (!storiesByReq.has(k)) storiesByReq.set(k, []); storiesByReq.get(k).push(s.id); }
-const reqIdsInFlow = reqRows.length ? reqRows.filter(r => !r.removed && (r.group==='FR' || storiesByReq.has(key(r.id)))).map(r => r.id) : [...new Set(stories.flatMap(s => s.requirements||[]))];
+const reqIdsInFlow = reqRows.length ? reqRows.filter(r => !r.removed && ['FR','NFR','UX-DR'].includes(r.group)).map(r => r.id) : [...new Set(stories.flatMap(s => s.requirements||[]))];
 const reqTextOf = (id) => reqByKey.get(key(id))?.text || '';
 const reqChanges = (id) => reqByKey.get(key(id))?.changes ?? (M.decisions.ranking.find(r => key(r.id)===key(id))?.changes || 0);
 
@@ -317,8 +318,12 @@ function ring(p, size=110, color='var(--acc)'){ const r = size*0.4, C = 2*Math.P
 function hero(){
   const rq = m.requirements; const sp = M.sprint;
   const cr = (k, p, l, sub) => \`<div class="cring" data-canvas="\${k}">\${ring(p)}<div class="l">\${l}</div><div class="s">\${sub}</div></div>\`;
-  const chain = \`<div class="chain">
-    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} · \${T.frDoneHint}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\${rq.removed?\` · \${rq.removed} \${T.frRemoved}\`:''}\`)}
+  // NFR y UX-DR se cumplen a traves de las stories que los citan; los que ninguna cita no
+  // pueden "completarse": se cuentan aparte como "sin story", no como 0%.
+  const small = (k, done, cov, tot, l) => \`<div class="cring sm" data-canvas="\${k}">\${ring(cov?pct(done,cov):null, 62)}<div><div class="l">\${l} <small style="color:var(--dim)">\${tot}</small></div><div class="s">\${done} \${T.of} \${cov} \${T.withStory}\${tot-cov?\` · \${tot-cov} \${T.noStory}\`:''}</div></div></div>\`;
+  const chain = \`<div class="chain"><div class="cstack">
+    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\${rq.removed?\` · \${rq.removed} \${T.frRemoved}\`:''}\`)}
+    \${small('nfr', rq.nfrDone, rq.nfrCovered, rq.nfr, 'NFR')}\${small('ux', rq.uxDone, rq.uxCovered, rq.ux, 'UX-DR')}</div>
     \${cr('stories', m.storiesPct, T.storiesDoneShort, \`\${m.storiesDone} \${T.of} \${m.stories}\`)}
     \${cr('specs', pct(m.changes.archived, m.changes.total), T.specsDone, \`\${m.changes.archived} \${T.of} \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`)}
     \${cr('tasks', m.tasksPct, T.tasksDone, \`\${m.tasks.done} \${T.of} \${m.tasks.total}\`)}
@@ -340,6 +345,11 @@ function canvasData(k){
       \`\${r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.frNoStory}</p>\`}\`);
     const mkr = (r) => item(\`<b class="mono" style="color:var(--dim)"><s>\${esc(r.id)}</s></b> <span style="color:var(--muted)">\${esc(r.text)}</span>\`, \`<span class="tag dim">\${T.frRemoved}\${r.removedAt?\` · \${r.removedAt}\`:''}</span>\`, \`<p>\${T.frRemovedHint}</p>\`);
     return { title: T.canvasFR, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done).map(mk), removed: removed.map(mkr) };
+  }
+  if (k==='nfr' || k==='ux') {
+    const g = k==='nfr' ? 'NFR' : 'UX-DR'; const rows = reqRows.filter(r => r.group===g && !r.removed);
+    const mk = (r) => item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`, \`\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag dim">\${T.noStory}</span>\`}\`, r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.nfrNoStory}</p>\`);
+    return { title: g, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done && r.stories.length).map(mk), removed: rows.filter(r => !r.stories.length).map(mk), removedLabel: \`\${T.noStory} — \${T.nfrNoStory}\` };
   }
   if (k==='stories') {
     const mk = (s) => { const c = specByStory.get(s.id); return item(\`<b class="mono" style="color:var(--acc)">Story \${esc(s.id)}</b> <span>\${esc(s.title)}</span>\`,
@@ -395,7 +405,7 @@ function openCanvas(k){
   } else {
     const d = canvasData(k); if (!d) return; title = d.title; expl = d.expl || '';
     tabs = d.single ? [{ key: 'one', label: title, html: list(d.pending) }]
-      : [{ key: 'done', label: T.tabDone, count: d.done.length, html: list(d.done), on: true }, { key: 'pending', label: T.tabPending, count: d.pending.length, html: list(d.pending) + (d.removed && d.removed.length ? \`<div class="grp"><h4>\${T.frRemoved} (\${d.removed.length})</h4>\${list(d.removed)}</div>\` : '') }];
+      : [{ key: 'done', label: T.tabDone, count: d.done.length, html: list(d.done), on: true }, { key: 'pending', label: T.tabPending, count: d.pending.length, html: list(d.pending) + (d.removed && d.removed.length ? \`<div class="grp"><h4>\${d.removedLabel || T.frRemoved} (\${d.removed.length})</h4>\${list(d.removed)}</div>\` : '') }];
   }
   if (!tabs.some(t => t.on)) tabs[0].on = true;
   c.innerHTML = \`<div class="ch"><h3>\${esc(title)}</h3><span class="sp"></span><button class="x" data-close-canvas>\${T.close} (Esc)</button></div>
@@ -498,7 +508,7 @@ function visibleStories(){ return flowState.epic == null ? stories : stories.fil
 function visibleReqs(){
   const vs = visibleStories(); const cited = new Set(vs.flatMap(s => (s.requirements||[]).map(key)));
   return reqIdsInFlow.filter(id => { const t = reqType(id); if (t === 'nfr' && !flowState.nfr) return false; if (t === 'ux' && !flowState.ux) return false; if (t === 'other') return false;
-    return flowState.epic == null ? (t === 'fr' || cited.has(key(id))) : cited.has(key(id)); });
+    return flowState.epic == null ? true : cited.has(key(id)); });
 }
 function flowBoard(){
   const vs = visibleStories(); const vr = visibleReqs();
@@ -571,9 +581,9 @@ function statsBody(){
   return \`<div class="card"><table class="stt"><thead><tr><th>\${T.stKind}</th><th>\${T.stEntries}</th><th>\${T.stDec}</th><th>\${T.stChg}</th><th>\${T.stOvr}</th><th>\${T.stAsm}</th><th>\${T.stOther}</th></tr></thead><tbody>\${rows}<tr style="font-weight:600"><td>Total</td><td>\${tot.entries}</td><td>\${tot.decisions}</td><td>\${tot.changes}</td><td>\${tot.overrides}</td><td>\${tot.assumptions}</td><td>\${other}</td></tr></tbody></table></div>\`;
 }
 function memorySec(){
-  const tabs = [['history', T.tabHistory, M.timeline.length], ['key', T.tabKey, M.decisions.key.length], ['impacts', T.tabImpacts, M.impacts.length], ['stats', T.tabStats, m.decisions.total]];
+  const tabs = [['stats', T.tabStats, m.decisions.total], ['history', T.tabHistory, M.timeline.length], ['key', T.tabKey, M.decisions.key.length], ['impacts', T.tabImpacts, M.impacts.length]];
   return \`<section><h2>\${T.memory}</h2><div class="tabs" style="padding:0" data-tabs="mem">\${tabs.map(([k,l,n],i) => \`<div class="tab \${i?'':'on'}" data-tab="\${k}">\${l}<b>\${n}</b></div>\`).join('')}</div>
-    <div class="pane on" data-pane="history" style="margin-top:14px">\${historyBody()}</div><div class="pane" data-pane="key" style="margin-top:14px">\${keyBody()}</div><div class="pane" data-pane="impacts" style="margin-top:14px">\${impactsBody()}</div><div class="pane" data-pane="stats" style="margin-top:14px">\${statsBody()}</div></section>\`;
+    <div class="pane on" data-pane="stats" style="margin-top:14px">\${statsBody()}</div><div class="pane" data-pane="history" style="margin-top:14px">\${historyBody()}</div><div class="pane" data-pane="key" style="margin-top:14px">\${keyBody()}</div><div class="pane" data-pane="impacts" style="margin-top:14px">\${impactsBody()}</div></section>\`;
 }
 
 // ---- drawer ----------------------------------------------------------------
