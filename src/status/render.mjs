@@ -95,7 +95,7 @@ const UI = {
     alertUnstable: 'requisitos inestables', alertHint: 'han cambiado 2 o mas veces despues de nacer — click para ver cuales y por que',
     alertNone: 'ningun requisito inestable', alertWhy: 'Un requisito que cambia varias veces es un requisito que el equipo no entiende igual. Cada cambio arrastra stories, specs y codigo ya hecho. Antes de tocar uno de estos, lee su historial y confirma con quien lo pidio.',
     tabDone: 'Completados', tabPending: 'Pendientes', canvasFR: 'Requisitos funcionales', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tareas', canvasUnstable: 'Requisitos inestables',
-    withStory: 'con story', nfrNoStory: 'ninguna story lo cita: se cumple transversalmente o falta mapearlo', frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
+    withStory: 'con story', completed: 'completados', pendingN: 'pendientes', nfrNoStory: 'ninguna story lo cita: se cumple transversalmente o falta mapearlo', frNoStory: 'sin story que lo construya', frPendingStories: 'stories pendientes', frRemoved: 'eliminados por decision', frRemovedHint: 'Sigue en el PRD tachado para que el identificador no se reutilice. No cuenta como pendiente ni como completado.',
     work: 'Cuando se trabajo', workHint: 'cada celda es un dia; el color, cuanta actividad quedo registrada: commits, decisiones, cambios, specs cerradas. Pasa el cursor para ver el detalle.',
     dayDec: 'decisiones', dayChg: 'cambios', dayBridge: 'corridas del puente', dayArch: 'specs cerradas', dayArt: 'artefactos', dayCommits: 'commits', gap: 'dias sin registro', activeDays: 'dias con actividad', less: 'menos', more: 'mas', dow: ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'], months: ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'], noActivity: 'sin actividad registrada', since: 'desde',
     memory: 'Memoria del proyecto', tabHistory: 'Historial paso a paso', tabKey: 'Decisiones clave', tabImpacts: 'Cambios e impacto', tabStats: 'Por etapa',
@@ -142,7 +142,7 @@ const UI = {
     alertUnstable: 'unstable requirements', alertHint: 'changed 2 or more times after birth — click to see which and why',
     alertNone: 'no unstable requirements', alertWhy: 'A requirement that changes several times is one the team does not understand the same way. Each change drags stories, specs and code already done. Before touching one of these, read its history and confirm with whoever asked for it.',
     tabDone: 'Completed', tabPending: 'Pending', canvasFR: 'Functional requirements', canvasStories: 'Stories', canvasSpecs: 'Specs', canvasTasks: 'Tasks', canvasUnstable: 'Unstable requirements',
-    withStory: 'with a story', nfrNoStory: 'no story cites it: met transversally, or still to be mapped', frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
+    withStory: 'with a story', completed: 'completed', pendingN: 'pending', nfrNoStory: 'no story cites it: met transversally, or still to be mapped', frNoStory: 'no story builds it', frPendingStories: 'pending stories', frRemoved: 'removed by decision', frRemovedHint: 'Stays struck through in the PRD so the identifier is not reused. Counts neither as pending nor as completed.',
     work: 'When work happened', workHint: 'each cell is a day; the color, how much recorded activity: commits, decisions, changes, specs closed. Hover for the detail.',
     dayDec: 'decisions', dayChg: 'changes', dayBridge: 'bridge runs', dayArch: 'specs closed', dayArt: 'artifacts', dayCommits: 'commits', gap: 'days without records', activeDays: 'active days', less: 'less', more: 'more', dow: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], months: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], noActivity: 'no recorded activity', since: 'since',
     memory: 'Project memory', tabHistory: 'Step-by-step history', tabKey: 'Key decisions', tabImpacts: 'Changes and impact', tabStats: 'Per stage',
@@ -320,9 +320,9 @@ function hero(){
   const cr = (k, p, l, sub) => \`<div class="cring" data-canvas="\${k}">\${ring(p)}<div class="l">\${l}</div><div class="s">\${sub}</div></div>\`;
   // NFR y UX-DR se cumplen a traves de las stories que los citan; los que ninguna cita no
   // pueden "completarse": se cuentan aparte como "sin story", no como 0%.
-  const small = (k, done, cov, tot, l) => \`<div class="cring sm" data-canvas="\${k}">\${ring(cov?pct(done,cov):null, 62)}<div><div class="l">\${l} <small style="color:var(--dim)">\${tot}</small></div><div class="s">\${done} \${T.of} \${cov} \${T.withStory}\${tot-cov?\` · \${tot-cov} \${T.noStory}\`:''}</div></div></div>\`;
+  const small = (k, done, cov, tot, l) => \`<div class="cring sm" data-canvas="\${k}">\${ring(tot?pct(done,tot):null, 62)}<div><div class="l">\${l}</div><div class="s">\${done} \${T.of} \${tot} \${T.completed} · \${tot-done} \${T.pendingN}\${tot-cov?\` <span style="color:var(--warn)">(\${tot-cov} \${T.noStory})</span>\`:''}</div></div></div>\`;
   const chain = \`<div class="chain"><div class="cstack">
-    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr}\${rq.fr-rq.covered?\` · <span style="color:var(--warn)">\${rq.fr-rq.covered} \${T.noStory}</span>\`:''}\${rq.removed?\` · \${rq.removed} \${T.frRemoved}\`:''}\`)}
+    \${cr('fr', rq.donePct, T.frDone, \`\${rq.done} \${T.of} \${rq.fr} \${T.completed} · \${rq.fr-rq.done} \${T.pendingN}\${rq.fr-rq.covered?\` <span style="color:var(--warn)">(\${rq.fr-rq.covered} \${T.noStory})</span>\`:''}\${rq.removed?\` · \${rq.removed} \${T.frRemoved}\`:''}\`)}
     \${small('nfr', rq.nfrDone, rq.nfrCovered, rq.nfr, 'NFR')}\${small('ux', rq.uxDone, rq.uxCovered, rq.ux, 'UX-DR')}</div>
     \${cr('stories', m.storiesPct, T.storiesDoneShort, \`\${m.storiesDone} \${T.of} \${m.stories}\`)}
     \${cr('specs', pct(m.changes.archived, m.changes.total), T.specsDone, \`\${m.changes.archived} \${T.of} \${m.changes.total}\${m.changes.doneUnarchived?\` · <span style="color:var(--warn)">\${m.changes.doneUnarchived} \${T.unclosed}</span>\`:''}\`)}
@@ -348,8 +348,8 @@ function canvasData(k){
   }
   if (k==='nfr' || k==='ux') {
     const g = k==='nfr' ? 'NFR' : 'UX-DR'; const rows = reqRows.filter(r => r.group===g && !r.removed);
-    const mk = (r) => item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`, \`\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag dim">\${T.noStory}</span>\`}\`, r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.nfrNoStory}</p>\`);
-    return { title: g, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done && r.stories.length).map(mk), removed: rows.filter(r => !r.stories.length).map(mk), removedLabel: \`\${T.noStory} — \${T.nfrNoStory}\` };
+    const mk = (r) => item(\`<b class="mono" style="color:var(--acc)">\${esc(r.id)}</b> <span>\${esc(r.text)}</span>\`, \`\${r.stories.length?\`<span class="tag">\${r.stories.length} \${T.stories}</span>\`:\`<span class="tag warn">\${T.noStory}</span>\`}\`, r.stories.length?r.stories.map(s => \`<p>\${storyLine(s)}</p>\`).join(''):\`<p>\${T.nfrNoStory}</p>\`);
+    return { title: g, done: rows.filter(r => r.done).map(mk), pending: rows.filter(r => !r.done).map(mk) };
   }
   if (k==='stories') {
     const mk = (s) => { const c = specByStory.get(s.id); return item(\`<b class="mono" style="color:var(--acc)">Story \${esc(s.id)}</b> <span>\${esc(s.title)}</span>\`,
