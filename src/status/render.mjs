@@ -9,7 +9,7 @@ const L = {
     phase: { understand: 'Entender', decide: 'Decidir', decompose: 'Descomponer', translate: 'Traducir', build: 'Construir', close: 'Cerrar' },
     state: { pending: 'pendiente', 'in-progress': 'en curso', done: 'tareas completas', archived: 'archivado', missing: 'sin change' },
     done: 'hecha', partial: 'en curso', notyet: 'pendiente', wave: 'Ola', current: 'ola actual', ready: 'se puede empezar',
-    blockedBy: 'bloqueada por', stories: 'stories', tasks: 'tareas', revision: 'rev', unstable: 'Requisitos que mas han cambiado',
+    blockedBy: 'bloqueada por', toArchive: 'falta archivar', stories: 'stories', tasks: 'tareas', revision: 'rev', unstable: 'Requisitos que mas han cambiado',
     changesN: 'cambios', mentions: 'menciones', orphans: 'FR sin story', none: 'ninguno', coverage: 'cubierto por',
     noTrace: 'Sin trace.json todavia: corre el puente (/sw:new fase 2).', noSprint: 'Sin epics.md: no hay olas que calcular.',
     noDecisions: 'Sin memlogs todavia: BMAD los escribe al conversar.', generated: 'generado', entries: 'entradas', sources: 'fuentes',
@@ -24,7 +24,7 @@ const L = {
     phase: { understand: 'Understand', decide: 'Decide', decompose: 'Decompose', translate: 'Translate', build: 'Build', close: 'Close' },
     state: { pending: 'pending', 'in-progress': 'in progress', done: 'tasks complete', archived: 'archived', missing: 'no change' },
     done: 'done', partial: 'in progress', notyet: 'pending', wave: 'Wave', current: 'current wave', ready: 'ready to start',
-    blockedBy: 'blocked by', stories: 'stories', tasks: 'tasks', revision: 'rev', unstable: 'Requirements that changed most',
+    blockedBy: 'blocked by', toArchive: 'archive pending', stories: 'stories', tasks: 'tasks', revision: 'rev', unstable: 'Requirements that changed most',
     changesN: 'changes', mentions: 'mentions', orphans: 'FR without story', none: 'none', coverage: 'covered by',
     noTrace: 'No trace.json yet: run the bridge (/sw:new phase 2).', noSprint: 'No epics.md: no waves to compute.',
     noDecisions: 'No memlogs yet: BMAD writes them while conversing.', generated: 'generated', entries: 'entries', sources: 'sources',
@@ -61,7 +61,7 @@ export function renderTerminal(s, lang = 'es') {
     for (const w of s.sprint.waves) {
       o.push(`  ${t.wave} ${w.n}${w.n === s.sprint.current ? ` ← ${t.current}` : ''}`);
       for (const i of w.items) {
-        const st = i.state === 'archived' ? t.state.archived : i.ready ? `${t.state[i.state]} · ${t.ready}` : i.blockedBy.length ? `${t.blockedBy} ${i.blockedBy.join(', ')}` : t.state[i.state];
+        const st = i.state === 'archived' ? t.state.archived : i.state === 'done' ? `${t.state.done} · ${t.toArchive}` : i.ready ? `${t.state[i.state]} · ${t.ready}` : i.blockedBy.length ? `${t.blockedBy} ${i.blockedBy.join(', ')}` : t.state[i.state];
         o.push(`    ${i.story.padEnd(5)} ${i.title.slice(0, 44).padEnd(44)} ${st}`);
       }
     }
@@ -106,7 +106,7 @@ export function renderHtml(s, lang = 'es') {
 
   const sprintHtml = s.sprint ? s.sprint.waves.map((w) => `
     <div class="wave ${w.n === s.sprint.current ? 'current' : ''}"><h4>${esc(t.wave)} ${w.n}${w.n === s.sprint.current ? ` <span class="tag">${esc(t.current)}</span>` : ''}</h4>
-      <ul>${w.items.map((i) => `<li class="${stateClass[i.state]}"><b>${esc(i.story)}</b> ${esc(i.title)} <span class="state">${i.state === 'archived' ? esc(t.state.archived) : i.ready ? `${esc(t.state[i.state])} · ${esc(t.ready)}` : i.blockedBy.length ? `${esc(t.blockedBy)} ${esc(i.blockedBy.join(', '))}` : esc(t.state[i.state])}</span></li>`).join('')}</ul>
+      <ul>${w.items.map((i) => `<li class="${stateClass[i.state]}"><b>${esc(i.story)}</b> ${esc(i.title)} <span class="state">${i.state === 'archived' ? esc(t.state.archived) : i.state === 'done' ? `${esc(t.state.done)} · ${esc(t.toArchive)}` : i.ready ? `${esc(t.state[i.state])} · ${esc(t.ready)}` : i.blockedBy.length ? `${esc(t.blockedBy)} ${esc(i.blockedBy.join(', '))}` : esc(t.state[i.state])}</span></li>`).join('')}</ul>
     </div>`).join('') + (s.sprint.cycles.length ? `<p class="warn">⚠ ${esc(s.sprint.cycles.join(', '))}</p>` : '') : `<p class="muted">${esc(t.noSprint)}</p>`;
 
   const reqHtml = s.requirements.rows.length ? `<table><thead><tr><th>ID</th><th></th><th>${esc(t.coverage)}</th><th>${esc(t.changesN)}</th><th>${esc(t.mentions)}</th></tr></thead><tbody>${s.requirements.rows.map((r) => `

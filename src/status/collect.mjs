@@ -81,16 +81,20 @@ export function sprintStatus(root, changes) {
     if (!cur || c.revision > cur.revision || (c.revision === cur.revision && c.state === 'archived')) byStory.set(c.story, c);
   }
   const stateOf = (story) => byStory.get(story)?.state || 'missing';
+  // Misma regla que /sw:build: una dependencia esta satisfecha si esta archivada O con su
+  // tasks.md completo. Verificado en un proyecto real donde nadie archivaba: exigir el archive
+  // marcaba como bloqueadas 22 stories cuyas dependencias ya estaban terminadas.
+  const satisfied = (story) => ['archived', 'done'].includes(stateOf(story));
   const waves = plan.waves.map((wave, i) => ({
     n: i + 1,
     items: wave.map((n) => {
       const st = stateOf(n.story);
-      const blockedBy = st === 'archived' ? [] : n.dependsOn.filter((d) => stateOf(d) !== 'archived');
-      return { story: n.story, title: n.title, changeId: byStory.get(n.story)?.id || n.changeId, capability: n.capability, state: st, blockedBy, ready: st !== 'archived' && !blockedBy.length };
+      const blockedBy = satisfied(n.story) ? [] : n.dependsOn.filter((d) => !satisfied(d));
+      return { story: n.story, title: n.title, changeId: byStory.get(n.story)?.id || n.changeId, capability: n.capability, state: st, blockedBy, ready: !satisfied(n.story) && !blockedBy.length };
     }),
   }));
   const all = waves.flatMap((w) => w.items);
-  const current = waves.find((w) => w.items.some((i) => i.state !== 'archived'))?.n || null;
+  const current = waves.find((w) => w.items.some((i) => !satisfied(i.story)))?.n || null;
   return {
     waves, current,
     totals: { stories: all.length, archived: all.filter((i) => i.state === 'archived').length, inProgress: all.filter((i) => i.state === 'in-progress' || i.state === 'done').length, ready: all.filter((i) => i.ready && i.state === 'pending').length, missing: all.filter((i) => i.state === 'missing').length },

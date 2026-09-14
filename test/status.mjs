@@ -51,6 +51,17 @@ test('el estado es una vista: se deriva de disco, no guarda nada', () => {
   assert.deepEqual(items['1.2'].blockedBy, ['1.1']);
   assert.deepEqual(items['2.1'].blockedBy, [], 'archivado: no se reporta bloqueado');
   assert.equal(items['2.2'].ready, true, 'su dependencia 2.1 ya esta archivada');
+
+  // Regla de /sw:build: tasks.md completo tambien satisface una dependencia (nadie archiva a tiempo).
+  const t12 = path.join(dir, 'openspec', 'changes', 'e1s1-registro-de-proveedor-con-nit', 'tasks.md');
+  fs.writeFileSync(t12, fs.readFileSync(t12, 'utf8').replace(/- \[ \]/g, '- [x]'));
+  const s2 = collectStatus(dir);
+  const it2 = Object.fromEntries(s2.sprint.waves.flatMap((w) => w.items).map((i) => [i.story, i]));
+  assert.equal(it2['1.1'].state, 'done');
+  assert.deepEqual(it2['1.2'].blockedBy, [], '1.1 con tareas completas ya no bloquea');
+  assert.equal(it2['1.2'].ready, true);
+  assert.equal(it2['1.1'].ready, false, 'terminada no es "lista para empezar"');
+  assert.equal(s2.sprint.current, 2, 'la ola 1 esta satisfecha');
   assert.equal(s.sprint.totals.ready, 1, 'solo cuenta las pendientes listas para empezar');
 
   // Requisitos: cobertura del trace + inestabilidad de los memlogs.
