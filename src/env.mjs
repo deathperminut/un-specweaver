@@ -192,24 +192,42 @@ export function vendorIds(agents, vendor) {
   return agents.map((a) => a.ids?.[vendor]).filter(Boolean).join(',');
 }
 
-// graphify es una capacidad OPCIONAL: se detecta, nunca se instala.
-// El modo de fallo que hay que evitar es el silencioso — que el agente invoque /graphify,
-// no pase nada, y siga explorando a ciegas sin decirlo. Por eso se reporta siempre.
+// graphify es parte del metodo, no una capacidad opcional: el grafo AST es el unico testigo
+// de la estructura REAL del codigo, y /sw:change lo usa para medir impacto. Se detecta con
+// precision porque el modo de fallo que hay que evitar es el silencioso: que el agente invoque
+// /graphify, no pase nada, y siga explorando a ciegas sin decirlo.
 //
-// Ojo: la skill suele vivir en ~/.claude/skills/, o sea que puede existir para Claude Code
-// y no para OpenCode. Se miran las cuatro rutas y se reporta cual.
-export function detectGraphify(root, home = os.homedir()) {
-  const candidates = [
-    [path.join(root, '.claude', 'skills', 'graphify'), 'proyecto/.claude'],
-    [path.join(root, '.agents', 'skills', 'graphify'), 'proyecto/.agents'],
-    [path.join(home, '.claude', 'skills', 'graphify'), '~/.claude'],
-    [path.join(home, '.agents', 'skills', 'graphify'), '~/.agents'],
-  ];
-  const found = candidates.filter(([p]) => fs.existsSync(p));
-  const graphPath = path.join(root, 'graphify-out', 'graph.json');
+// La skill se instala DENTRO del proyecto (graphify install --project), en la ruta que cada
+// agente usa para graphify — no coincide con la de BMAD para OpenCode (.opencode vs .agents).
+export function detectGraphify(root, agents = Object.entries(VENDORS.agents).map(([id, a]) => ({ ...a, id }))) {
+  const v = VENDORS.graphify;
+  const skills = agents
+    .filter((a) => a.graphifySkill)
+    .map((a) => ({ id: a.id, path: a.graphifySkill, present: fs.existsSync(path.join(root, a.graphifySkill, 'SKILL.md')) }));
+  const graphPath = path.join(root, v.outDir, 'graph.json');
   return {
-    available: found.length > 0,
-    where: found.map(([, label]) => label).join(', ') || null,
+    bin: which(v.bin),
+    skills,
+    ignore: graphifyIgnoreOk(root),
+    hook: graphifyHookOk(root),
     graph: fs.existsSync(graphPath) ? path.relative(root, graphPath) : null,
   };
+}
+
+export const GRAPHIFY_IGNORE_START = '# >>> un-specweaver >>>';
+export const GRAPHIFY_IGNORE_END   = '# <<< un-specweaver <<<';
+
+export function graphifyIgnoreOk(root) {
+  try { return fs.readFileSync(path.join(root, VENDORS.graphify.ignoreFile), 'utf8').includes(GRAPHIFY_IGNORE_START); }
+  catch { return false; }
+}
+
+// El hook lo escribe `graphify hook install` en .git/hooks/post-commit. Se verifica por
+// contenido, no por existencia: un post-commit ajeno no cuenta.
+export function graphifyHookOk(root) {
+  try {
+    const gitDir = execFileSync('git', ['-C', root, 'rev-parse', '--git-dir'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    const hook = path.resolve(root, gitDir, 'hooks', 'post-commit');
+    return fs.readFileSync(hook, 'utf8').includes('graphify');
+  } catch { return false; }
 }

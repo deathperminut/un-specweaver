@@ -2,7 +2,8 @@
 // Sin esa separacion, --dry-run seria una mentira mantenida a mano.
 import fs from 'node:fs';
 import path from 'node:path';
-import { VENDORS, which, vendorIds, isGitRepo, untrustedItems, engramProject, engramBinding, legacyEngramMcp, ENGRAM_CONFIG } from './env.mjs';
+import { VENDORS, which, vendorIds, isGitRepo, untrustedItems, engramProject, engramBinding, legacyEngramMcp, ENGRAM_CONFIG,
+         detectGraphify, GRAPHIFY_IGNORE_START, GRAPHIFY_IGNORE_END } from './env.mjs';
 import { t } from './i18n.mjs';
 
 const LAYER = new URL('./layer/', import.meta.url);
@@ -60,6 +61,10 @@ const note  = (text) => ({ kind: 'note', text });
 // reportar "listo" sobre algo que no ocurrio seria mentir.
 const blocked = (title, why, fix) => ({ kind: 'blocked', title, why, fix });
 
+// Transforma un archivo que una accion ANTERIOR del mismo paso crea (no existe al planear).
+// `apply(content) -> content`. Si el archivo no existe o no cambia, no escribe nada.
+const patch = (file, apply, why) => ({ kind: 'patch', file, apply, why });
+
 // `curl | sh` es la via oficial de Gentle-AI, pero descarga y ejecuta codigo remoto.
 // Se marca `consent: true` para que el runner nunca lo corra sin autorizacion explicita.
 const shell = (script, why) => ({ kind: 'shell', script, why, consent: true });
@@ -90,6 +95,8 @@ export function gitignoreBlock(_agentsIgnored) {
   const agents = Object.values(VENDORS.agents);
   const lines = [GITIGNORE_START, '# Regenerable con `un-specweaver init` — no va al repo.', '',
                  'node_modules/', '_bmad/', '**/.openspec-target',
+                 // AST puro, regenerable en segundos; el hook lo reescribe en cada commit.
+                 `${VENDORS.graphify.outDir}/`,
                  ...VENDORS.gentle.generatedProjectDirs.map((d) => `${d}/`), ''];
   // Cada vendor escribe en sitios distintos. OpenSpec ademas crea <dir-del-agente>/skills/,
   // que no aparece en la config porque BMAD manda las skills de OpenCode a .agents/skills.
@@ -98,7 +105,7 @@ export function gitignoreBlock(_agentsIgnored) {
   const dirs = [...new Set([...agents.flatMap((a) => [a.skills, a.commands].filter(Boolean)), ...siblings])].sort();
   for (const d of dirs) {
     if (d.endsWith('skills')) {
-      lines.push(`${d}/bmad-*/`, `${d}/openspec-*/`, `${d}/un-specweaver/`);
+      lines.push(`${d}/bmad-*/`, `${d}/openspec-*/`, `${d}/un-specweaver/`, `${d}/graphify/`);
       // Gentle-AI instala ~25 skills mas. Se enumeran porque no comparten un prefijo unico
       // y porque ignorar `${d}/` entero escondería las skills propias del usuario.
       for (const pre of VENDORS.gentle.skillPrefixes) lines.push(`${d}/${pre}*/`);
@@ -125,8 +132,46 @@ export function gitignoreBlock(_agentsIgnored) {
     if (!sharedWithUser.has(h)) lines.push(`${h}/`);
   }
 
-  lines.push('', `# Al repo SI van: openspec/, _bmad-output/, docs/, .un-specweaver/, ${VENDORS.gentle.keepTracked.join(', ')}`, GITIGNORE_END);
+  lines.push('', `# Al repo SI van: openspec/, _bmad-output/, docs/, .un-specweaver/, .engram/config.json, ${VENDORS.graphify.ignoreFile}, ${VENDORS.gentle.keepTracked.join(', ')}`, GITIGNORE_END);
   return lines.join('\n') + '\n';
+}
+
+// El grafo es SOLO de codigo. Los docs tienen otro dueno (PRD, specs, Engram) y duplicarlos
+// en el grafo es como las capas empiezan a contradecirse. Ademas /sw:adopt necesita un testigo
+// que no haya leido la arquitectura declarada. Bloque marcado, como el de .gitignore.
+export function graphifyIgnoreBlock() {
+  return [GRAPHIFY_IGNORE_START,
+          '# El grafo de graphify es de CODIGO. Los docs tienen otro dueno: PRD, specs, Engram.',
+          ...VENDORS.graphify.ignore,
+          GRAPHIFY_IGNORE_END].join('\n') + '\n';
+}
+
+// graphify registra hooks PreToolUse en .claude/settings.json que dicen "MANDATORY: consulta el
+// grafo antes de leer/grepear". Utiles para codigo; ruido para docs: el hook de Read|Glob tambien
+// dispara sobre .md/.txt/.rst, y el PRD, los specs y la memoria NO estan en el grafo a proposito.
+// Se acota el hook a extensiones de codigo y se excluyen las carpetas de docs del metodo. Si una
+// version futura cambia el texto del hook, no se toca: mejor un hook ruidoso que uno roto.
+export function scopeGraphifyHooks(json) {
+  let j;
+  try { j = JSON.parse(json); } catch { return json; }
+  let changed = false;
+  for (const entry of j?.hooks?.PreToolUse || []) {
+    if (!/Read|Glob/.test(entry.matcher || '')) continue;
+    for (const h of entry.hooks || []) {
+      if (typeof h.command !== 'string') continue;
+      const before = h.command;
+      h.command = h.command
+        .replace(/,'\.md','\.rst','\.txt','\.mdx'/, '')
+        .replace("'graphify-out/' not in s", "not any(p in s for p in ('graphify-out/','_bmad/','_bmad-output/','openspec/','docs/','.un-specweaver/','.engram/'))");
+      if (h.command !== before) changed = true;
+    }
+  }
+  return changed ? JSON.stringify(j, null, 2) + '\n' : json;
+}
+
+function mergeMarkedBlock(current, block, start, end) {
+  const without = current.includes(start) ? current.replace(new RegExp(`${start}[\\s\\S]*?${end}\\n?`), '') : current;
+  return without.trimEnd() ? `${without.trimEnd()}\n\n${block}` : block;
 }
 
 export const STEPS = [
@@ -337,6 +382,66 @@ export const STEPS = [
   },
 
   {
+    id: 'graphify-bin',
+    blocks: 'build',
+    titleKey: 'step.graphify-bin.title',
+    status(ctx) {
+      const bin = which(VENDORS.graphify.bin);
+      return bin ? { state: 'ok', detail: bin } : { state: 'pending', detail: t(ctx.lang, 'step.graphify-bin.missing') };
+    },
+    plan(ctx) {
+      const v = VENDORS.graphify;
+      if (which(v.bin)) return [note(t(ctx.lang, 'step.graphify-bin.already', v.bin))];
+      // Herramienta Python. uv y pipx la aislan en su propio entorno; pip sobre el python del
+      // sistema no. Sin ninguno de los dos, se pide (no se instala un gestor de paquetes a nadie).
+      if (which('uv'))   return [exec('uv',   ['tool', 'install', `${v.pip}==${v.version}`], t(ctx.lang, 'step.graphify-bin.why', 'uv'))];
+      if (which('pipx')) return [exec('pipx', ['install', `${v.pip}==${v.version}`], t(ctx.lang, 'step.graphify-bin.why', 'pipx'))];
+      return [blocked(t(ctx.lang, 'step.graphify-bin.noInstaller'), t(ctx.lang, 'step.graphify-bin.noInstallerWhy'), t(ctx.lang, 'step.graphify-bin.noInstallerFix', ctx.platform))];
+    },
+  },
+
+  {
+    id: 'graphify',
+    blocks: 'build',
+    dependsOn: 'graphify-bin',
+    titleKey: 'step.graphify.title',
+    status(ctx) {
+      if (!which(VENDORS.graphify.bin)) return { state: 'pending', detail: t(ctx.lang, 'step.graphify.after') };
+      const g = detectGraphify(ctx.root, ctx.agents);
+      const missing = [];
+      if (!g.ignore) missing.push(VENDORS.graphify.ignoreFile);
+      for (const sk of g.skills) if (!sk.present) missing.push(`${sk.path} (${sk.id})`);
+      if (isGitRepo(ctx.root) && !g.hook) missing.push('post-commit hook');
+      // graph.json no se exige: en un proyecto sin codigo `graphify update` no lo crea, y
+      // eso es correcto — el grafo aparece con el primer commit que traiga codigo.
+      return missing.length
+        ? { state: 'pending', detail: t(ctx.lang, 'step.graphify.pending', missing.join(', ')) }
+        : { state: 'ok', detail: t(ctx.lang, g.graph ? 'step.graphify.ok' : 'step.graphify.okNoGraph', g.graph) };
+    },
+    plan(ctx) {
+      const v = VENDORS.graphify;
+      const f = path.join(ctx.root, v.ignoreFile);
+      const cur = fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : '';
+      const actions = [
+        note(t(ctx.lang, 'step.graphify.scope')),
+        write(f, mergeMarkedBlock(cur, graphifyIgnoreBlock(), GRAPHIFY_IGNORE_START, GRAPHIFY_IGNORE_END), t(ctx.lang, 'step.graphify.ignoreWhy')),
+        // Un comando por agente: la skill queda dentro del proyecto, en la ruta que graphify
+        // usa para ese agente. Tambien agrega `## graphify` a CLAUDE.md / AGENTS.md.
+        ...ctx.agents.filter((a) => a.ids?.graphify).flatMap((a) => [
+          exec(v.bin, ['install', '--project', '--platform', a.ids.graphify], t(ctx.lang, 'step.graphify.skillWhy', a.id), { tolerateFailure: true }),
+          // Solo Claude Code recibe hooks; el patch no encuentra archivo en los demas y no hace nada.
+          ...(a.commands ? [patch(path.join(ctx.root, path.dirname(a.commands), 'settings.json'), scopeGraphifyHooks, t(ctx.lang, 'step.graphify.hooksWhy'))] : []),
+        ]),
+        // AST: determinista, sin LLM. En un proyecto sin codigo termina bien y no crea nada.
+        exec(v.bin, ['update', '.'], t(ctx.lang, 'step.graphify.updateWhy'), { tolerateFailure: true }),
+      ];
+      if (isGitRepo(ctx.root)) actions.push(exec(v.bin, ['hook', 'install'], t(ctx.lang, 'step.graphify.hookWhy')));
+      else actions.push(note(t(ctx.lang, 'step.graphify.noGitHook')));
+      return actions;
+    },
+  },
+
+  {
     id: 'surface',
     blocks: 'none',
     dependsOn: 'gentle-config',
@@ -442,6 +547,7 @@ export function renderAction(a, root) {
     case 'exec':  return `$ ${a.cmd} ${a.args.map((x) => (/[\s]/.test(x) ? JSON.stringify(x) : x)).join(' ')}`;
     case 'shell': return `$ ${a.script}`;
     case 'write': return `+ ${rel(a.file)} (${Buffer.byteLength(a.content)} bytes)`;
+    case 'patch': return `~ ${rel(a.file)} — ${a.why}`;
     case 'rm':    return `- ${rel(a.target)}`;
     case 'note':  return `  ${a.text}`;
     case 'blocked': return `! ${a.title}`;

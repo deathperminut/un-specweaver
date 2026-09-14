@@ -25,7 +25,6 @@ INIT
   quedan en .un-specweaver/config.json. Los flags siempre mandan sobre lo guardado.
 
   --lang es|en                 idioma de comandos, documentos y mensajes
-  --graphify auto|off          usar el mapa del codigo si esta instalado, o ignorarlo
   --dry-run        imprime el plan exacto sin escribir ni ejecutar nada
   --yes            no pregunta antes de ejecutar el instalador remoto de Gentle-AI
   --force          rehace pasos que ya estaban hechos
@@ -42,7 +41,9 @@ QUE HACE INIT
      (escriben codigo o compiten con OpenSpec; --no-shims evita los shims deprecados)
   4. inicializa OpenSpec
   5. instala y configura Gentle-AI (SDD + Engram) con alcance workspace
-  6. escribe la skill un-specweaver y docs/architecture-base.md
+  6. segmenta la memoria de Engram por proyecto (.engram/config.json)
+  7. instala graphify, la skill en el proyecto, .graphifyignore (solo codigo), el grafo AST y el hook
+  8. escribe los comandos /sw:*, la skill un-specweaver y docs/architecture-base.md
 
   Todo queda dentro del proyecto. Nada se escribe en tu $HOME salvo el binario
   de Gentle-AI, que es una herramienta de sistema.
@@ -57,7 +58,7 @@ function flags(argv) {
     // Existio en 0.1.x. La memoria ahora es siempre por proyecto; se acepta para no romper
     // scripts, se avisa, y se ignora.
     else if (a === '--engram-scope') { argv[++i]; console.error('aviso: --engram-scope ya no existe, la memoria de Engram siempre se segmenta por proyecto'); }
-    else if (a === '--graphify') o.graphify = argv[++i];
+    else if (a === '--graphify') { argv[++i]; console.error('aviso: --graphify ya no existe, el mapa del codigo es parte del metodo (usa --skip graphify-bin,graphify si no lo quieres)'); }
     else if (a === '--dry-run') o.dryRun = true;
     else if (a === '--yes' || a === '-y') o.yes = true;
     else if (a === '--force') o.force = true;
@@ -119,6 +120,7 @@ switch (cmd) {
     console.log(`  bmad      ${VENDORS.bmad.npm}@${VENDORS.bmad.version}   modulos: ${VENDORS.bmad.modules}   podado: ${VENDORS.bmad.prune.join(', ')}`);
     console.log(`  openspec  ${VENDORS.openspec.npm}@${VENDORS.openspec.version}`);
     console.log(`  gentle    ${VENDORS.gentle.bin} ${VENDORS.gentle.version}`);
+    console.log(`  graphify  ${VENDORS.graphify.pip}@${VENDORS.graphify.version}   solo codigo (${VENDORS.graphify.ignoreFile})`);
     console.log(`\n  Para subir un vendor: edita src/vendors.json, publica, y "un-specweaver doctor" reporta el drift.\n`);
     process.exit(0);
 

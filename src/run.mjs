@@ -34,6 +34,16 @@ export async function runAction(a, ctx) {
       return { ok: true };
     }
 
+    case 'patch': {
+      if (!fs.existsSync(a.file)) return { ok: true };
+      const before = fs.readFileSync(a.file, 'utf8');
+      const after = a.apply(before);
+      if (after === before) return { ok: true };
+      fs.writeFileSync(a.file, after, 'utf8');
+      console.log(`     ${t(ctx.lang, 'run.patched', path.relative(ctx.root, a.file))}`);
+      return { ok: true };
+    }
+
     case 'rm': {
       // Nunca borrar fuera de la raiz del proyecto, pase lo que pase con los flags.
       const target = path.resolve(a.target);

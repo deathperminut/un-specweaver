@@ -24,6 +24,11 @@ Read `.un-specweaver/trace.json` and `_bmad-output/prd.md`. Classify the require
 State the classification out loud, citing the specific FR or story that backs it. If torn between
 two, pick the more restrictive one and explain why.
 
+**Measure the impact on the real code, not the imagined one.** If `graphify-out/graph.json` exists,
+run `graphify affected "<module or symbol the requirement touches>"` and report what depends on it:
+an "in scope" that drags five modules along is not that in scope. If there is no graph,
+`graphify update .` builds it in seconds; if graphify is missing, say so and carry on.
+
 **Do not move to Step 2 without user confirmation for anything other than "in scope".**
 
 ## Step 2 — Update the source document, not the derived one

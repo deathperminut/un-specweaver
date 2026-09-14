@@ -24,6 +24,11 @@ Lee `.un-specweaver/trace.json` y `_bmad-output/prd.md`. Clasifica el requerimie
 Di la clasificacion en voz alta, con el FR o la story concreta que la sustenta. Si dudas entre
 dos, elige la mas restrictiva y explica por que.
 
+**Mide el impacto en el codigo real, no el imaginado.** Si hay `graphify-out/graph.json`, corre
+`graphify affected "<modulo o simbolo que toca el requerimiento>"` y reporta que depende de eso:
+un "dentro del alcance" que arrastra cinco modulos no es tan dentro del alcance. Si no hay grafo,
+`graphify update .` lo construye en segundos; si graphify no esta, dilo y sigue.
+
 **No sigas al Paso 2 sin que el usuario confirme una clasificacion que no sea "dentro del alcance".**
 
 ## Paso 2 — Actualizar el documento fuente, no el derivado
