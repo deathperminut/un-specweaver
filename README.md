@@ -62,7 +62,7 @@ Once comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en Ope
    /sw:build <id> ──▶ construir una historia contra su contrato
                                       │
                                       ▼
-                              /sw:build la archiva
+                    /sw:close la valida y archiva (linea base)
 ```
 
 | Comando | Cuando |
@@ -353,16 +353,26 @@ linea de tiempo completa con archivo y motivo. Es una vista: no guarda nada. En 
 (150 entradas, 34 ids citados) el primero del ranking era un FR con un `(override)` que decia
 exactamente por que se descarto lo que el asistente habia sugerido — y `/sw:change` no lo veia.
 
-`status` junta todo en una pantalla: las seis fases con el artefacto que las prueba, los changes
-con su avance (casillas de `tasks.md`) y su estado (pendiente, en curso, tareas completas,
-archivado), las olas del sprint con que se puede empezar ya y que esta bloqueado por quien, los
-requisitos con cobertura e inestabilidad, las decisiones por tipo, y un historial que mezcla
-memlogs, corridas del puente y archives. `--html` escribe un archivo **autocontenido** —CSS y JS
-inline, sin CDN ni servidor— que se abre offline, en CI, o lo abre un compañero sin instalar nada.
-Es una vista: **no guarda nada** y se regenera cada vez, asi que va al `.gitignore`. Si algo se ve
-mal ahi, esta mal en la fuente. Se mantiene solo: `bridge` y `close` lo regeneran al terminar, e
-`init` deja un hook de post-commit que lo rehace con cada commit — una vista que solo se actualiza
-cuando alguien se acuerda es una vista vieja.
+`status` en terminal es el resumen; `status --open` es **el dashboard**, pensado para responder
+"¿como vamos?" a alguien que no conoce el metodo:
+
+| Seccion | Que muestra |
+|---|---|
+| Nomenclatura | que es un FR, NFR, UX-DR, AD, epic, story, AC, spec, change, ola, revision, descarte. Abierta por defecto |
+| ¿Como vamos? | anillos en cadena: FR / NFR / UX-DR completados → stories terminadas → specs cerradas → tareas hechas. Click en cualquiera abre un canvas a pantalla completa con **Completados / Pendientes** y cada item plegable (una story con su narrativa, requisitos, spec y criterios; una tarea con su seccion y su casilla). Debajo, la alerta de **requisitos inestables** (2+ cambios), que explica que significa y abre cada uno con su historial |
+| Cuando se trabajo | un calendario por mes con cada dia coloreado por actividad registrada —commits de git, decisiones, cambios, corridas del puente, specs cerradas— y click en el dia para ver que paso |
+| Esfuerzo por etapa | Brief, PRD, arquitectura, UX y cambios de alcance: cuantas decisiones, cambios, descartes y supuestos dejo cada una. Click en una barra abre las entradas; click en un documento (`prd.md`, `DESIGN.md`, el memlog…) lo abre renderizado. Debajo, la descomposicion: FR/NFR/UX-DR → epics → stories → specs → tareas |
+| Flujo | cuatro columnas conectadas —requisitos, epics, stories, specs— con filtro por epic para proyectos largos (NFR y UX-DR ocultos por defecto). Click resalta el camino y abre el detalle; los requisitos inestables llevan su conteo en el bloque |
+| Memoria del proyecto | pestañas: por etapa, historial paso a paso, decisiones clave (descartes primero), cambios y a que afectaron |
+
+Todo sale de archivos que ya existen: el PRD y los memlogs de BMAD, `epics.md` (con los requisitos
+eliminados tachados, que no cuentan), `trace.json`, `openspec/changes/` y `archive/`,
+`changelog.jsonl`, el grafo de graphify, el `git log`. `--html` escribe un archivo
+**autocontenido** —CSS y JS inline, sin CDN ni servidor— que se abre offline, en CI, o lo abre
+un compañero sin instalar nada. Es una vista: **no guarda nada** y se regenera cada vez, asi
+que va al `.gitignore`. Si algo se ve mal ahi, esta mal en la fuente. Se mantiene solo: `bridge`
+y `close` lo regeneran al terminar, e `init` deja un hook de post-commit que lo rehace con cada
+commit — una vista que solo se actualiza cuando alguien se acuerda es una vista vieja.
 
 `close` existe porque el cierre dependia de la memoria del agente. `/sw:build` decia "archiva
 cuando este entregado" y en un proyecto real quedaron 22 stories terminadas y **cero archivadas**:
@@ -599,7 +609,8 @@ implementando `status()` y `plan()`; `--dry-run`, la idempotencia y `doctor` sal
 | 11 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
 | Skill `un-specweaver` | **funciona**, es/en, todos los agentes |
 | `history` — decisiones por requisito | **funciona** — memlogs + propuestas de cambio + ledger; probado sobre un proyecto real |
-| `status` / dashboard | **funciona** — terminal y HTML autocontenido, es/en |
+| `status` / dashboard | **funciona** — terminal y dashboard HTML autocontenido de gerencia, es/en, probado sobre un proyecto real; se regenera con bridge, close y cada commit |
+| `close` — cerrar stories | **funciona** — valida y archiva; 22 stories cerradas en un proyecto real |
 | Mensajes del CLI bilingües | **funciona**, 86 cadenas, es/en |
 | graphify (mapa del codigo, solo codigo) | **funciona** — instalado, acotado, grafo AST y hook; verificado contra graphify 0.8.37 |
 | Gentle-AI (binario) | **funciona** — instala via Homebrew |
