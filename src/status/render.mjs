@@ -86,79 +86,301 @@ export function renderTerminal(s, lang = 'es') {
 
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
+// Textos de la app (cliente). Se embeben junto con el modelo; el HTML no depende de nada externo.
+const UI = {
+  es: {
+    title: 'Estado del proyecto', how: '¿Como vamos?', glossary: 'Nomenclatura', glossaryHint: 'que significa cada sigla',
+    complete: 'completado', storiesDone: 'stories terminadas', tasks: 'tareas hechas', coverage: 'requisitos con story',
+    archived: 'specs archivadas', wave: 'ola actual', ready: 'listas para empezar', revisions: 'revisiones', decisions: 'decisiones registradas',
+    days: 'dias de trabajo', unstable: 'requisitos inestables', of: 'de', phases: 'Fases del metodo',
+    phase: { understand: 'Entender', decide: 'Decidir', decompose: 'Descomponer', translate: 'Traducir', build: 'Construir', close: 'Cerrar' },
+    effort: 'Esfuerzo por etapa', effortHint: 'lo que el metodo deja escrito: decisiones, cambios, supuestos, artefactos. No horas.',
+    kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Arquitectura', 'ux-designs': 'UX', 'change-proposal': 'Cambios de alcance' },
+    entries: 'entradas', dec: 'decisiones', chg: 'cambios', ovr: 'descartes', asm: 'supuestos',
+    funnel: 'Descomposicion', funnelHint: 'del PRD al codigo', req: 'requisitos', epics: 'epics', stories: 'stories', criteria: 'criterios', tasksN: 'tareas', specs: 'specs',
+    flow: 'Flujo: del requisito a la spec', flowHint: 'click en un bloque para ver el detalle y su camino', colReq: 'Requisitos (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
+    noStory: 'sin story', changesN: 'cambios', ac: 'AC', fr: 'FR', tasksShort: 'tareas', rev: 'rev',
+    state: { pending: 'pendiente', 'in-progress': 'en curso', done: 'terminada', archived: 'archivada', missing: 'sin spec' },
+    impacts: 'Cambios y a que afectaron', impactsHint: 'cada cambio registrado, los requisitos que cita y las stories que toca', affects: 'afecta a', noImpacts: 'sin cambios registrados todavia',
+    key: 'Decisiones para tener presentes', keyHint: 'descartes con motivo primero: son las que se reabren por accidente',
+    type: { override: 'descartado', constraint: 'restriccion', decision: 'decision', direction: 'direccion', change: 'cambio', modified: 'spec modificada', generated: 'specs generadas', archived: 'archivada', assumption: 'supuesto', event: 'evento', question: 'pregunta', version: 'version' },
+    history: 'Historial paso a paso', historyHint: 'decisiones, cambios, corridas del puente y archives, en orden', noHistory: 'todavia no hay historial',
+    detail: 'Detalle', close: 'cerrar', epic: 'Epic', storyOf: 'Story', role: 'Como', want: 'quiero', benefit: 'para', reqOf: 'Requisitos', criteriaOf: 'Criterios de aceptacion',
+    given: 'Dado', when: 'Cuando', then: 'Entonces', and: 'Y', spec: 'Spec', progress: 'Avance', covers: 'Cubierto por', reqHistory: 'Historia del requisito', noHist: 'sin cambios registrados: estable',
+    storiesOf: 'Stories del epic', goal: 'Objetivo', map: 'Mapa del codigo', nodes: 'nodos', edges: 'aristas', engram: 'Memoria', bound: 'atada a', unbound: 'sin atar', absent: 'no instalada',
+    generated: 'generado', regen: 'Regenerar: npx un-specweaver status --open', source: 'fuente', empty: 'Nada todavia. Este proyecto no ha pasado por /sw:new.',
+    gloss: [
+      ['FR', 'Requisito funcional: algo que el producto hace. Numerado en el PRD; todo lo demas se rastrea hasta uno.'],
+      ['NFR', 'Requisito no funcional: rendimiento, seguridad, accesibilidad. Restringe como se hace.'],
+      ['UX-DR', 'Requisito de diseño de experiencia: sale del diseño UX y se mapea a stories.'],
+      ['AD', 'Decision de arquitectura: tecnica, tomada una vez, vinculante para todas las stories.'],
+      ['Epic', 'Un bloque de valor del producto. Agrupa stories; equivale a una capability en las specs.'],
+      ['Story', 'La unidad que una persona puede terminar. "Como X quiero Y para Z" + criterios de aceptacion.'],
+      ['AC', 'Criterio de aceptacion (Dado / Cuando / Entonces). Cada uno se vuelve un escenario de prueba.'],
+      ['Spec', 'El contrato ejecutable de una story (OpenSpec). Se genera, no se escribe a mano. Gentle-AI construye contra el.'],
+      ['Change', 'La carpeta de trabajo de una spec: propuesta, tareas, delta. Al terminar se archiva y pasa a ser la verdad.'],
+      ['Ola', 'Conjunto de stories que se pueden construir en paralelo porque no dependen entre si.'],
+      ['Revision', 'Una story ya construida que cambio: su spec se regenera como rev 2, 3… sin perder la anterior.'],
+      ['Descarte', 'Una opcion que se evaluo y se rechazo, con motivo. Reabrirla sin saberlo es el error mas caro.'],
+    ],
+  },
+  en: {
+    title: 'Project status', how: 'How are we doing?', glossary: 'Glossary', glossaryHint: 'what each acronym means',
+    complete: 'complete', storiesDone: 'stories finished', tasks: 'tasks done', coverage: 'requirements with a story',
+    archived: 'specs archived', wave: 'current wave', ready: 'ready to start', revisions: 'revisions', decisions: 'decisions recorded',
+    days: 'working days', unstable: 'unstable requirements', of: 'of', phases: 'Method phases',
+    phase: { understand: 'Understand', decide: 'Decide', decompose: 'Decompose', translate: 'Translate', build: 'Build', close: 'Close' },
+    effort: 'Effort per stage', effortHint: 'what the method leaves written: decisions, changes, assumptions, artifacts. Not hours.',
+    kind: { briefs: 'Brief', prds: 'PRD', architecture: 'Architecture', 'ux-designs': 'UX', 'change-proposal': 'Scope changes' },
+    entries: 'entries', dec: 'decisions', chg: 'changes', ovr: 'discards', asm: 'assumptions',
+    funnel: 'Decomposition', funnelHint: 'from PRD to code', req: 'requirements', epics: 'epics', stories: 'stories', criteria: 'criteria', tasksN: 'tasks', specs: 'specs',
+    flow: 'Flow: from requirement to spec', flowHint: 'click a block to see its detail and path', colReq: 'Requirements (PRD)', colEpic: 'Epics', colStory: 'Stories', colSpec: 'Specs (OpenSpec → Gentle-AI)',
+    noStory: 'no story', changesN: 'changes', ac: 'AC', fr: 'FR', tasksShort: 'tasks', rev: 'rev',
+    state: { pending: 'pending', 'in-progress': 'in progress', done: 'finished', archived: 'archived', missing: 'no spec' },
+    impacts: 'Changes and what they affected', impactsHint: 'each recorded change, the requirements it cites and the stories it touches', affects: 'affects', noImpacts: 'no changes recorded yet',
+    key: 'Decisions to keep in mind', keyHint: 'discards with their reason first: those are the ones reopened by accident',
+    type: { override: 'discarded', constraint: 'constraint', decision: 'decision', direction: 'direction', change: 'change', modified: 'spec modified', generated: 'specs generated', archived: 'archived', assumption: 'assumption', event: 'event', question: 'question', version: 'version' },
+    history: 'Step-by-step history', historyHint: 'decisions, changes, bridge runs and archives, in order', noHistory: 'no history yet',
+    detail: 'Detail', close: 'close', epic: 'Epic', storyOf: 'Story', role: 'As', want: 'I want', benefit: 'so that', reqOf: 'Requirements', criteriaOf: 'Acceptance criteria',
+    given: 'Given', when: 'When', then: 'Then', and: 'And', spec: 'Spec', progress: 'Progress', covers: 'Covered by', reqHistory: 'Requirement history', noHist: 'no recorded changes: stable',
+    storiesOf: 'Stories in this epic', goal: 'Goal', map: 'Code map', nodes: 'nodes', edges: 'edges', engram: 'Memory', bound: 'bound to', unbound: 'not bound', absent: 'not installed',
+    generated: 'generated', regen: 'Regenerate: npx un-specweaver status --open', source: 'source', empty: 'Nothing yet. This project has not gone through /sw:new.',
+    gloss: [
+      ['FR', 'Functional requirement: something the product does. Numbered in the PRD; everything else traces back to one.'],
+      ['NFR', 'Non-functional requirement: performance, security, accessibility. Constrains how it is done.'],
+      ['UX-DR', 'UX design requirement: comes out of the UX design and maps to stories.'],
+      ['AD', 'Architecture decision: technical, made once, binding for every story.'],
+      ['Epic', 'A block of product value. Groups stories; equals a capability in the specs.'],
+      ['Story', 'The unit one person can finish. "As X I want Y so that Z" + acceptance criteria.'],
+      ['AC', 'Acceptance criterion (Given / When / Then). Each becomes a test scenario.'],
+      ['Spec', 'The executable contract of a story (OpenSpec). Generated, never hand-written. Gentle-AI builds against it.'],
+      ['Change', 'The working folder of a spec: proposal, tasks, delta. When finished it is archived and becomes the truth.'],
+      ['Wave', 'A set of stories that can be built in parallel because they do not depend on each other.'],
+      ['Revision', 'An already-built story that changed: its spec is regenerated as rev 2, 3… without losing the previous one.'],
+      ['Discard', 'An option that was evaluated and rejected, with a reason. Reopening it unknowingly is the most expensive mistake.'],
+    ],
+  },
+};
+
 export function renderHtml(s, lang = 'es') {
-  const t = L[lang] || L.es;
-  const stateClass = { pending: 'st-pending', 'in-progress': 'st-progress', done: 'st-done', archived: 'st-archived', missing: 'st-missing' };
-  const pct = (c) => (c.progress.total ? Math.round((c.progress.done / c.progress.total) * 100) : 0);
-
-  const phasesHtml = s.phases.map((p) => `
-    <li class="phase ${p.done ? 'done' : p.partial ? 'partial' : ''}">
-      <span class="dot"></span>
-      <div><b>${p.n}. ${esc(t.phase[p.key])}</b> <small>${p.done ? esc(t.done) : p.partial ? esc(t.partial) : esc(t.notyet)}${p.count != null ? ` · ${p.count}` : ''}</small>
-      ${p.artifacts?.length ? `<div class="files">${p.artifacts.map((a) => `<code>${esc(a.file)}</code>${a.date ? ` <small>${esc(a.date)}</small>` : ''}`).join('<br>')}</div>` : ''}</div>
-    </li>`).join('');
-
-  const changesHtml = s.changes.length ? `<table><thead><tr><th>Story</th><th>Change</th><th>${esc(t.tasks)}</th><th></th></tr></thead><tbody>${s.changes.map((c) => `
-    <tr class="${stateClass[c.state]}"><td>${esc(c.story || '')}</td>
-      <td><code>${esc(c.id)}</code>${c.revision > 1 ? ` <span class="tag">${esc(t.revision)} ${c.revision} · ${esc(t.delta[c.delta] || c.delta)}</span>` : ''}<br><small>${esc(c.title)}</small></td>
-      <td>${c.state === 'archived' ? `<small>${esc(c.archivedAt || '')}</small>` : `<div class="bar"><i style="width:${pct(c)}%"></i></div><small>${c.progress.done}/${c.progress.total}</small>`}</td>
-      <td><span class="state">${esc(t.state[c.state])}</span></td></tr>`).join('')}</tbody></table>` : `<p class="muted">${esc(t.noTrace)}</p>`;
-
-  const sprintHtml = s.sprint ? s.sprint.waves.map((w) => `
-    <div class="wave ${w.n === s.sprint.current ? 'current' : ''}"><h4>${esc(t.wave)} ${w.n}${w.n === s.sprint.current ? ` <span class="tag">${esc(t.current)}</span>` : ''}</h4>
-      <ul>${w.items.map((i) => `<li class="${stateClass[i.state]}"><b>${esc(i.story)}</b> ${esc(i.title)} <span class="state">${i.state === 'archived' ? esc(t.state.archived) : i.state === 'done' ? `${esc(t.state.done)} · ${esc(t.toArchive)}` : i.ready ? `${esc(t.state[i.state])} · ${esc(t.ready)}` : i.blockedBy.length ? `${esc(t.blockedBy)} ${esc(i.blockedBy.join(', '))}` : esc(t.state[i.state])}</span></li>`).join('')}</ul>
-    </div>`).join('') + (s.sprint.cycles.length ? `<p class="warn">⚠ ${esc(s.sprint.cycles.join(', '))}</p>` : '') : `<p class="muted">${esc(t.noSprint)}</p>`;
-
-  const reqHtml = s.requirements.rows.length ? `<table><thead><tr><th>ID</th><th></th><th>${esc(t.coverage)}</th><th>${esc(t.changesN)}</th><th>${esc(t.mentions)}</th></tr></thead><tbody>${s.requirements.rows.map((r) => `
-    <tr class="${r.changes >= 3 ? 'hot' : r.changes > 0 ? 'warm' : ''}"><td><b>${esc(r.id)}</b></td><td>${esc(r.text)}</td><td>${r.stories.length ? esc(r.stories.join(', ')) : `<span class="warn">${esc(t.orphans)}</span>`}</td><td>${r.changes}</td><td>${r.mentions}</td></tr>`).join('')}</tbody></table>` : `<p class="muted">${esc(t.noTrace)}</p>`;
-
-  const decHtml = s.decisions.total ? `<p>${s.decisions.total} ${esc(t.entries)} · ${s.decisions.sources} ${esc(t.sources)} — ${Object.entries(s.decisions.byType).map(([k, v]) => `<span class="tag">${esc(k)} ${v}</span>`).join(' ')}</p>
-    ${s.decisions.ranking.length ? `<h4>${esc(t.unstable)}</h4><ol>${s.decisions.ranking.filter((r) => r.changes > 0).map((r) => `<li><b>${esc(r.id)}</b> — ${r.changes} ${esc(t.changesN)}, ${r.mentions} ${esc(t.mentions)}${r.last ? ` <small>${esc(r.last)}</small>` : ''} <code>npx un-specweaver history ${esc(r.id)}</code></li>`).join('')}</ol>` : ''}` : `<p class="muted">${esc(t.noDecisions)}</p>`;
-
-  const tlHtml = s.timeline.length ? `<ul class="tl">${s.timeline.slice(0, 80).map((e) => `<li><time>${esc(e.when || '—')}</time> <span class="tag">${esc(e.source)}</span> <span class="tag t-${esc(e.type)}">${esc(e.type)}</span> ${esc(e.text)}${e.refs?.length ? ` <small>${e.refs.map(esc).join(', ')}</small>` : ''}<br><small class="muted">${esc(e.file)}</small></li>`).join('')}</ul>` : `<p class="muted">—</p>`;
-
+  const ui = UI[lang] || UI.es;
+  const json = JSON.stringify({ model: s, ui, lang }).replace(/</g, '\\u003c');
   return `<!doctype html>
 <html lang="${esc(lang)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(s.project.name)} — ${esc(t.title)}</title>
+<title>${esc(s.project.name)} — ${esc(ui.title)}</title>
 <style>
-:root{--bg:#fafaf9;--fg:#1c1917;--muted:#78716c;--line:#e7e5e4;--card:#fff;--ok:#16a34a;--warn:#d97706;--hot:#dc2626;--acc:#4f46e5;--tag:#f5f5f4}
-@media(prefers-color-scheme:dark){:root{--bg:#0c0a09;--fg:#e7e5e4;--muted:#a8a29e;--line:#292524;--card:#1c1917;--tag:#292524}}
-*{box-sizing:border-box}body{margin:0;padding:24px 16px;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:1100px;margin:0 auto}h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}h4{margin:12px 0 6px;font-size:13px}
-.muted{color:var(--muted)}.warn{color:var(--warn)}small{color:var(--muted);font-size:12px}code{font:12px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--tag);padding:1px 5px;border-radius:4px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px}.card b{font-size:20px;display:block}
-ul.phases{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.phase{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;gap:8px}
-.phase .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--muted);flex:none;margin-top:5px}.phase.done .dot{background:var(--ok);border-color:var(--ok)}.phase.partial .dot{background:linear-gradient(90deg,var(--warn) 50%,transparent 50%);border-color:var(--warn)}
-.files{margin-top:4px;font-size:12px;word-break:break-all}table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:8px}th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:12px;color:var(--muted)}
-.bar{height:6px;background:var(--tag);border-radius:3px;overflow:hidden;min-width:80px}.bar i{display:block;height:100%;background:var(--acc)}.state{font-size:12px;color:var(--muted)}
-.st-archived .state{color:var(--ok)}.st-progress .state,.st-done .state{color:var(--acc)}.st-missing .state{color:var(--hot)}tr.hot td:first-child b{color:var(--hot)}tr.warm td:first-child b{color:var(--warn)}
-.tag{display:inline-block;font-size:11px;background:var(--tag);border-radius:4px;padding:0 6px;color:var(--muted)}.t-override,.t-modified{color:var(--hot)}.t-change{color:var(--warn)}.t-archived{color:var(--ok)}
-.wave{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin-bottom:8px}.wave.current{border-color:var(--acc)}.wave ul{margin:0;padding-left:0;list-style:none}.wave li{padding:3px 0}
-ul.tl{list-style:none;padding:0;margin:0}ul.tl li{padding:6px 0;border-bottom:1px dashed var(--line)}time{font:12px ui-monospace,Menlo,monospace;color:var(--muted);margin-right:6px}
-.tables{overflow-x:auto}footer{margin-top:32px;color:var(--muted);font-size:12px}
-</style></head><body><main>
-<h1>${esc(s.project.name)}</h1><p class="muted">${esc(t.title)} · ${esc(t.generated)} ${esc(s.generatedAt.slice(0, 16).replace('T', ' '))}${s.project.agents.length ? ` · ${esc(s.project.agents.join(', '))}` : ''}</p>
+:root{color-scheme:dark;--bg:#0a0e17;--bg2:#0d1321;--card:#121a2b;--card2:#182236;--line:#1f2b41;--line2:#2a3a57;--fg:#e6edf6;--muted:#8a97ae;--dim:#5b6780;
+--acc:#38bdf8;--acc-soft:rgba(56,189,248,.14);--good:#4ade80;--good-soft:rgba(74,222,128,.14);--warn:#fab219;--warn-soft:rgba(250,178,25,.14);--crit:#f26161;--crit-soft:rgba(242,97,97,.16);--vio:#a78bfa;
+--mono:ui-monospace,SFMono-Regular,Menlo,"JetBrains Mono",monospace;--sans:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--acc)}code,.mono{font-family:var(--mono);font-size:12px}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 20px;background:rgba(10,14,23,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:600}.logo i{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--acc),#6366f1);display:inline-block}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border:1px solid var(--line2);border-radius:999px;font-size:12px;color:var(--muted);background:var(--bg2)}.pill b{color:var(--fg);font-weight:500}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--good)}.pill .dot.warn{background:var(--warn)}.pill .dot.off{background:var(--dim)}
+.top .sp{flex:1}main{max-width:1280px;margin:0 auto;padding:20px 20px 60px}
+section{margin-top:28px}h2{font-size:15px;font-weight:600;margin:0 0 4px;letter-spacing:.2px}h2+.hint,.hint{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+details.gloss{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px}details.gloss summary{cursor:pointer;color:var(--muted);font-size:13px;list-style:none;display:flex;gap:8px;align-items:center}
+details.gloss summary::before{content:'▸';color:var(--acc)}details.gloss[open] summary::before{content:'▾'}.gloss-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px 18px;margin-top:10px}
+.gloss-grid div{font-size:12.5px;color:var(--muted)}.gloss-grid b{font-family:var(--mono);color:var(--acc);font-weight:600;margin-right:6px}
+.hero{display:grid;grid-template-columns:220px 1fr;gap:14px}.ring{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.ring svg{width:150px;height:150px}.ring .n{font-size:34px;font-weight:700;letter-spacing:-1px}.ring small{color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:78px}
+.tile .v{font-size:24px;font-weight:600;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.tile .v small{font-size:13px;color:var(--muted);font-weight:400;margin-left:3px}.tile .l{color:var(--muted);font-size:12px;margin-top:2px}
+.tile .bar{margin-top:8px}.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);border-radius:3px}.bar i.good{background:var(--good)}
+.stepper{display:flex;align-items:center;gap:0;margin-top:14px;overflow-x:auto;padding:4px 0}.step{display:flex;align-items:center;gap:8px;white-space:nowrap}.step .c{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);display:grid;place-items:center;font-size:11px;color:var(--muted);flex:none}
+.step.done .c{background:var(--good-soft);border-color:var(--good);color:var(--good)}.step.partial .c{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}.step .t{font-size:12.5px}.step.done .t{color:var(--fg)}.step .t{color:var(--muted)}
+.step .ln{width:46px;height:2px;background:var(--line2);margin:0 8px;flex:none}.step.done .ln{background:var(--good)}
+.effort{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:860px){.effort,.hero{grid-template-columns:1fr}}
+.erow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}.erow:last-child{border:0}.erow .k{color:var(--muted);font-size:12.5px}.erow .bars{display:flex;gap:2px;height:10px}.erow .bars i{display:block;height:100%;border-radius:2px}
+.erow .n{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin-top:8px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.funnel{display:flex;align-items:stretch;gap:0;overflow-x:auto}.fstep{flex:1;min-width:110px;background:var(--card2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;position:relative}.fstep+.fstep{margin-left:22px}.fstep+.fstep::before{content:'→';position:absolute;left:-19px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px}
+.fstep .v{font-size:22px;font-weight:600}.fstep .l{color:var(--muted);font-size:12px}
+.flow{position:relative;background:radial-gradient(circle,var(--line) 1px,transparent 1px) 0 0/22px 22px,var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;overflow-x:auto}
+.cols{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:56px;position:relative;z-index:1;min-width:1000px}.col h4{margin:0 0 10px;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.blk{background:var(--card);border:1px solid var(--line2);border-radius:8px;padding:9px 11px;margin-bottom:10px;cursor:pointer;transition:border-color .15s,box-shadow .15s,opacity .15s;position:relative}
+.blk:hover{border-color:var(--acc)}.blk.sel{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-soft),0 0 18px rgba(56,189,248,.15)}.blk.lit{border-color:var(--acc)}.flow.focus .blk:not(.lit):not(.sel){opacity:.28}
+.blk .id{font-family:var(--mono);font-size:11.5px;color:var(--acc);display:flex;justify-content:space-between;align-items:center;gap:6px}.blk .tt{font-size:13px;margin:3px 0 5px;line-height:1.35}
+.blk .meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}.tag{display:inline-flex;align-items:center;gap:4px;padding:1px 7px;border-radius:5px;font-family:var(--mono);font-size:11px;background:var(--card2);border:1px solid var(--line2);color:var(--muted)}
+.tag.fr{color:var(--good);border-color:rgba(74,222,128,.35);background:var(--good-soft)}.tag.warn{color:var(--warn);border-color:rgba(250,178,25,.4);background:var(--warn-soft)}.tag.crit{color:var(--crit);border-color:rgba(242,97,97,.4);background:var(--crit-soft)}
+.tag.acc{color:var(--acc);border-color:rgba(56,189,248,.4);background:var(--acc-soft)}.tag.vio{color:var(--vio);border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.14)}.tag.dim{color:var(--dim)}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:11px}.st::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--dim)}.st.in-progress::before{background:var(--acc)}.st.done::before{background:var(--good)}.st.archived::before{background:var(--good);box-shadow:0 0 0 2px var(--good-soft)}.st.missing::before{background:var(--crit)}
+.blk .mini{height:4px;background:var(--line);border-radius:2px;margin-top:6px;overflow:hidden}.blk .mini i{display:block;height:100%;background:var(--acc)}
+svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}svg.wires path{fill:none;stroke:var(--line2);stroke-width:1.5;opacity:.7}svg.wires path.lit{stroke:var(--acc);stroke-width:2;opacity:1}.flow.focus svg.wires path:not(.lit){opacity:.15}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}.dc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px}.dc .h{display:flex;gap:8px;align-items:center;margin-bottom:6px;flex-wrap:wrap}.dc time{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.dc p{margin:0;color:var(--fg)}.dc .refs{margin-top:8px;display:flex;gap:5px;flex-wrap:wrap}.dc .chip{cursor:pointer}.dc .chip:hover{border-color:var(--acc)}.dc.override{border-left:3px solid var(--crit)}.dc.constraint{border-left:3px solid var(--warn)}.dc.decision{border-left:3px solid var(--acc)}.dc.direction{border-left:3px solid var(--vio)}
+.grp{margin-top:14px}.grp h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.tl{list-style:none;margin:0;padding:0 0 0 22px;position:relative}.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--line2)}.tl li{position:relative;padding:0 0 16px 14px}.tl li::before{content:'';position:absolute;left:-19px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--card);border:2px solid var(--line2)}
+.tl li.t-override::before,.tl li.t-modified::before{border-color:var(--crit);background:var(--crit-soft)}.tl li.t-change::before{border-color:var(--warn);background:var(--warn-soft)}.tl li.t-archived::before,.tl li.t-generated::before{border-color:var(--good);background:var(--good-soft)}.tl li.t-decision::before{border-color:var(--acc);background:var(--acc-soft)}
+.tl .h{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:2px}.tl time{font-family:var(--mono);font-size:11px;color:var(--muted)}.tl p{margin:0;font-size:13px}.tl small{color:var(--dim);font-family:var(--mono);font-size:11px}
+.tl .day{font-family:var(--mono);font-size:11px;color:var(--acc);margin:6px 0 10px -22px;padding-left:0;list-style:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,92vw);background:var(--bg2);border-left:1px solid var(--line2);transform:translateX(105%);transition:transform .2s;z-index:30;overflow-y:auto;padding:16px 18px 40px;box-shadow:-20px 0 40px rgba(0,0,0,.4)}.drawer.open{transform:none}
+.drawer .dh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.drawer .dh .id{font-family:var(--mono);color:var(--acc)}.drawer .x{background:none;border:1px solid var(--line2);color:var(--muted);border-radius:6px;padding:3px 9px;cursor:pointer}.drawer .x:hover{color:var(--fg);border-color:var(--acc)}
+.drawer h3{font-size:16px;margin:0 0 12px;line-height:1.35}.drawer h5{margin:16px 0 6px;font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}.drawer .ac{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12.5px}.drawer .ac b{color:var(--acc);font-weight:500;margin-right:4px}
+.drawer .row{display:flex;gap:6px;flex-wrap:wrap}.drawer .link{cursor:pointer}.drawer .link:hover{border-color:var(--acc);color:var(--acc)}
+.empty{padding:30px;text-align:center;color:var(--muted);border:1px dashed var(--line2);border-radius:10px}footer{margin-top:40px;color:var(--dim);font-size:12px;font-family:var(--mono)}
+</style></head><body>
+<div id="app"></div>
+<aside id="drawer" class="drawer"></aside>
+<script id="data" type="application/json">${json}</script>
+<script>
+(function(){
+const {model:M, ui:T, lang} = JSON.parse(document.getElementById('data').textContent);
+const $ = (s, r=document) => r.querySelector(s);
+const esc = (x) => String(x ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const key = (id) => String(id).replace(/[-_ ]/g,'').toUpperCase();
+const cssEsc = (v) => (window.CSS && CSS.escape) ? CSS.escape(v) : String(v).replace(/["\\\\]/g, '\\\\$&');
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+const m = M.metrics;
 
-<h2>${esc(t.summary)}</h2>
-<div class="grid">
-  <div class="card"><b>${s.changes.length}</b>${esc(t.changes)}</div>
-  <div class="card"><b>${s.changes.filter((c) => c.state === 'archived').length}</b>${esc(t.archived)}</div>
-  <div class="card"><b>${s.sprint ? s.sprint.totals.ready : '—'}</b>${esc(t.ready)}</div>
-  <div class="card"><b>${s.requirements.rows.length}</b>${esc(t.requirements)}</div>
-  <div class="card"><b>${s.decisions.total}</b>${esc(t.decisions)}</div>
-  <div class="card"><b>${s.graph.nodes ?? '—'}</b>${esc(t.map)} (${esc(t.graphNodes)})</div>
-</div>
+// ---- indices -------------------------------------------------------------
+const reqRows = M.requirements.rows; const reqByKey = new Map(reqRows.map(r => [key(r.id), r]));
+const stories = M.epics.flatMap(e => e.stories.map(s => ({...s, epic: e.n, epicTitle: e.title})));
+const storyById = new Map(stories.map(s => [s.id, s]));
+const specByStory = new Map(); for (const c of M.changes) { const cur = specByStory.get(c.story); if (!cur || c.revision > cur.revision || (c.revision===cur.revision && c.state==='archived')) specByStory.set(c.story, c); }
+// requisito -> stories (desde epics.md, que trae el coverage map; no depende del trace)
+const storiesByReq = new Map(); for (const s of stories) for (const r of s.requirements||[]) { const k = key(r); if (!storiesByReq.has(k)) storiesByReq.set(k, []); storiesByReq.get(k).push(s.id); }
+const reqIdsInFlow = reqRows.length ? reqRows.filter(r => r.group==='FR' || storiesByReq.has(key(r.id))).map(r => r.id) : [...new Set(stories.flatMap(s => s.requirements||[]))];
+const reqTextOf = (id) => reqByKey.get(key(id))?.text || '';
+const reqChanges = (id) => reqByKey.get(key(id))?.changes ?? (M.decisions.ranking.find(r => key(r.id)===key(id))?.changes || 0);
 
-<h2>${esc(t.phases)}</h2><ul class="phases">${phasesHtml}</ul>
-<h2>${esc(t.sprint)}${s.sprint ? ` <small>${s.sprint.totals.archived} ${esc(t.of)} ${s.sprint.totals.stories} ${esc(t.stories)} ${esc(t.archived)}</small>` : ''}</h2>${sprintHtml}
-<h2>${esc(t.changes)}</h2><div class="tables">${changesHtml}</div>
-<h2>${esc(t.requirements)}</h2><div class="tables">${reqHtml}</div>
-<h2>${esc(t.decisions)}</h2>${decHtml}
-<h2>${esc(t.timeline)}</h2>${tlHtml}
-<h2>${esc(t.map)} · ${esc(t.memory)}</h2>
-<p>${s.graph.path ? `${s.graph.nodes} ${esc(t.graphNodes)}, ${s.graph.edges} ${esc(t.graphEdges)}${s.graph.html ? ` — <a href="../${esc(s.graph.html)}">${esc(t.openGraph)}</a>` : ''}` : `<span class="muted">${esc(t.noGraph)}</span>`}<br>
-${s.engram.available ? (s.engram.project ? `${esc(t.engramOn)} <code>${esc(s.engram.project)}</code>` : `<span class="warn">${esc(t.engramOff)}</span>`) : `<span class="muted">${esc(t.engramAbsent)}</span>`}</p>
-<footer>${esc(t.hint)}</footer>
-</main></body></html>
+// ---- header ----------------------------------------------------------------
+function header(){
+  const eng = M.engram.available ? (M.engram.project ? \`<span class="pill"><i class="dot"></i>\${T.engram} <b>\${esc(M.engram.project)}</b></span>\` : \`<span class="pill"><i class="dot warn"></i>\${T.engram} <b>\${T.unbound}</b></span>\`) : \`<span class="pill"><i class="dot off"></i>\${T.engram} <b>\${T.absent}</b></span>\`;
+  const gr = M.graph.path ? \`<span class="pill"><i class="dot"></i>\${T.map} <b>\${M.graph.nodes} \${T.nodes}</b>\${M.graph.html?\` · <a href="../\${esc(M.graph.html)}">graph.html</a>\`:''}</span>\` : \`<span class="pill"><i class="dot off"></i>\${T.map}</span>\`;
+  return \`<div class="top"><div class="logo"><i></i>un-specweaver</div><span class="pill"><b>\${esc(M.project.name)}</b></span><span class="sp"></span>
+    \${M.project.agents.length?\`<span class="pill">\${esc(M.project.agents.join(', '))}</span>\`:''}\${eng}\${gr}<span class="pill mono">\${esc(M.generatedAt.slice(0,16).replace('T',' '))}</span></div>\`;
+}
+
+// ---- glosario ----------------------------------------------------------------
+const glossary = () => \`<details class="gloss"><summary><b>\${T.glossary}</b> — \${T.glossaryHint}</summary><div class="gloss-grid">\${T.gloss.map(([k,v]) => \`<div><b>\${esc(k)}</b>\${esc(v)}</div>\`).join('')}</div></details>\`;
+
+// ---- hero ------------------------------------------------------------------
+function hero(){
+  const p = m.storiesPct ?? 0; const r = 62, C = 2*Math.PI*r;
+  const ring = \`<svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--line)" stroke-width="10"/><circle cx="75" cy="75" r="\${r}" fill="none" stroke="var(--acc)" stroke-width="10" stroke-linecap="round" stroke-dasharray="\${C}" stroke-dashoffset="\${C*(1-p/100)}" transform="rotate(-90 75 75)"/><text x="75" y="70" text-anchor="middle" fill="var(--fg)" font-size="30" font-weight="700">\${p}%</text><text x="75" y="92" text-anchor="middle" fill="var(--muted)" font-size="11">\${esc(T.complete)}</text></svg>\`;
+  const tile = (v, l, bar, sub) => \`<div class="tile"><div class="v">\${v}\${sub?\`<small>\${sub}</small>\`:''}</div><div class="l">\${l}</div>\${bar!=null?\`<div class="bar"><i class="\${bar>=100?'good':''}" style="width:\${Math.min(100,bar)}%"></i></div>\`:''}</div>\`;
+  const sp = M.sprint;
+  return \`<section><h2>\${T.how}</h2><div class="hero"><div class="card ring">\${ring}<small>\${m.storiesDone} \${T.of} \${m.stories} \${T.storiesDone}</small></div>
+  <div class="tiles">
+    \${tile(m.tasks.done, T.tasks, m.tasksPct, \`/ \${m.tasks.total}\`)}
+    \${tile(m.requirements.coveragePct==null?'—':m.requirements.coveragePct+'%', T.coverage, m.requirements.coveragePct, m.requirements.fr?\`\${m.requirements.covered}/\${m.requirements.fr} FR\`:'')}
+    \${tile(m.changes.archived, T.archived, pct(m.changes.archived, m.changes.total), \`/ \${m.changes.total}\`)}
+    \${tile(sp&&sp.current?sp.current:'—', T.wave, null, sp?\`/ \${sp.waves.length} · \${sp.totals.ready} \${T.ready}\`:'')}
+    \${tile(m.decisions.total, T.decisions, null, m.decisions.changes?\`· \${m.decisions.changes} \${T.chg}\`:'')}
+    \${tile(m.requirements.unstable, T.unstable, null, '')}
+    \${tile(m.changes.revisions, T.revisions, null, '')}
+    \${tile(m.dates.days==null?'—':m.dates.days, T.days, null, m.dates.first?\`\${m.dates.first} → \${m.dates.last}\`:'')}
+  </div></div>
+  <div class="stepper">\${M.phases.map((p,i) => \`<div class="step \${p.done?'done':p.partial?'partial':''}"><span class="c">\${p.done?'✓':p.n}</span><span class="t">\${esc(T.phase[p.key])}</span>\${i<M.phases.length-1?'<span class="ln"></span>':''}</div>\`).join('')}</div></section>\`;
+}
+
+// ---- esfuerzo ----------------------------------------------------------------
+function effort(){
+  const kinds = ['briefs','prds','architecture','ux-designs','change-proposal'].filter(k => m.decisions.byKind[k]);
+  const max = Math.max(1, ...kinds.map(k => m.decisions.byKind[k].entries));
+  const rows = kinds.map(k => { const d = m.decisions.byKind[k]; const other = d.entries - d.decisions - d.changes - d.overrides - d.assumptions; const w = (n) => (n/max*100).toFixed(1)+'%';
+    return \`<div class="erow"><span class="k">\${esc(T.kind[k]||k)}\${m.dates.phases[k]?\`<br><span class="mono" style="color:var(--dim)">\${m.dates.phases[k]}</span>\`:''}</span><div class="bars" title="\${d.entries} \${T.entries}"><i style="width:\${w(d.decisions)};background:var(--acc)"></i><i style="width:\${w(d.changes)};background:var(--warn)"></i><i style="width:\${w(d.overrides)};background:var(--crit)"></i><i style="width:\${w(d.assumptions)};background:var(--vio)"></i><i style="width:\${w(other)};background:var(--line2)"></i></div><span class="n">\${d.decisions} \${T.dec} · \${d.changes} \${T.chg}\${d.overrides?\` · \${d.overrides} \${T.ovr}\`:''}\${d.assumptions?\` · \${d.assumptions} \${T.asm}\`:''}</span></div>\`; }).join('');
+  const f = (v,l) => \`<div class="fstep"><div class="v">\${v}</div><div class="l">\${l}</div></div>\`;
+  return \`<section><h2>\${T.effort}</h2><p class="hint">\${T.effortHint}</p><div class="effort">
+    <div class="card">\${rows || \`<div class="empty">\${T.noHistory}</div>\`}<div class="legend"><span><i style="background:var(--acc)"></i>\${T.dec}</span><span><i style="background:var(--warn)"></i>\${T.chg}</span><span><i style="background:var(--crit)"></i>\${T.ovr}</span><span><i style="background:var(--vio)"></i>\${T.asm}</span></div></div>
+    <div class="card"><h4 style="margin:0 0 10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px">\${T.funnel} — \${T.funnelHint}</h4><div class="funnel">\${f(m.requirements.total, T.req)}\${f(m.epics, T.epics)}\${f(m.stories, T.stories)}\${f(m.scenarios, T.criteria)}\${f(m.changes.total, T.specs)}\${f(m.tasks.total, T.tasksN)}</div></div>
+  </div></section>\`;
+}
+
+// ---- flujo ----------------------------------------------------------------
+function flow(){
+  if (!stories.length && !reqIdsInFlow.length) return \`<section><h2>\${T.flow}</h2><div class="empty">\${T.empty}</div></section>\`;
+  const reqB = reqIdsInFlow.map(id => { const n = reqChanges(id); const st = storiesByReq.get(key(id)) || []; return \`<div class="blk" data-k="req" data-id="\${esc(id)}"><div class="id"><span>\${esc(id)}</span>\${n?\`<span class="tag \${n>=3?'crit':'warn'}">\${n} \${T.changesN}</span>\`:''}</div><div class="tt">\${esc(reqTextOf(id)).slice(0,110)}</div><div class="meta">\${st.length?\`<span class="tag">\${st.length} \${T.stories}</span>\`:\`<span class="tag crit">\${T.noStory}</span>\`}</div></div>\`; }).join('');
+  const epicB = M.epics.map(e => \`<div class="blk" data-k="epic" data-id="\${e.n}"><div class="id"><span>Epic \${e.n}</span><span class="tag">\${e.stories.length} \${T.stories}</span></div><div class="tt">\${esc(e.title)}</div></div>\`).join('');
+  const storyB = stories.map(s => { const sp = specByStory.get(s.id); return \`<div class="blk" data-k="story" data-id="\${esc(s.id)}"><div class="id"><span>Story \${esc(s.id)}</span><span class="tag dim">Epic \${s.epic}</span></div><div class="tt">\${esc(s.title)}</div><div class="meta"><span class="tag">\${s.criteria.length} \${T.ac}</span>\${(s.requirements||[]).slice(0,4).map(r => \`<span class="tag fr">\${esc(r)}</span>\`).join('')}\${(s.requirements||[]).length>4?\`<span class="tag">+\${s.requirements.length-4}</span>\`:''}</div></div>\`; }).join('');
+  const specB = stories.map(s => { const c = specByStory.get(s.id); if (!c) return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}" style="border-style:dashed"><div class="id"><span>Story \${esc(s.id)}</span></div><div class="meta"><span class="st missing">\${T.state.missing}</span></div></div>\`;
+    return \`<div class="blk" data-k="spec" data-id="\${esc(s.id)}"><div class="id"><span>\${esc(c.id.length>34?c.id.slice(0,32)+'…':c.id)}</span>\${c.revision>1?\`<span class="tag crit">\${T.rev} \${c.revision}</span>\`:''}</div><div class="meta"><span class="st \${c.state}">\${T.state[c.state]}\${c.archivedAt?\` · \${c.archivedAt}\`:''}</span>\${c.state!=='archived'?\`<span class="tag">\${c.progress.done}/\${c.progress.total} \${T.tasksShort}</span>\`:''}</div>\${c.state!=='archived'?\`<div class="mini"><i style="width:\${pct(c.progress.done,c.progress.total)}%"></i></div>\`:''}</div>\`; }).join('');
+  return \`<section><h2>\${T.flow}</h2><p class="hint">\${T.flowHint}</p><div class="flow" id="flow"><svg class="wires" id="wires"></svg><div class="cols">
+    <div class="col"><h4>\${T.colReq}</h4>\${reqB}</div><div class="col"><h4>\${T.colEpic}</h4>\${epicB}</div><div class="col"><h4>\${T.colStory}</h4>\${storyB}</div><div class="col"><h4>\${T.colSpec}</h4>\${specB}</div>
+  </div></div></section>\`;
+}
+// aristas: req->story, epic->story, story->spec
+function edges(){
+  const E = [];
+  for (const s of stories) { for (const r of s.requirements||[]) if (reqIdsInFlow.some(x => key(x)===key(r))) E.push(['req', reqIdsInFlow.find(x => key(x)===key(r)), 'story', s.id]); E.push(['epic', String(s.epic), 'story', s.id]); E.push(['story', s.id, 'spec', s.id]); }
+  return E;
+}
+function drawWires(lit){
+  const flow = $('#flow'); const svg = $('#wires'); if (!flow || !svg) return;
+  const fb = flow.getBoundingClientRect(); const box = (k,id) => { const el = flow.querySelector(\`.blk[data-k="\${k}"][data-id="\${cssEsc(id)}"]\`); if (!el) return null; const b = el.getBoundingClientRect(); return { x1: b.left-fb.left+flow.scrollLeft, x2: b.right-fb.left+flow.scrollLeft, y: b.top-fb.top+b.height/2+flow.scrollTop }; };
+  svg.setAttribute('width', flow.scrollWidth); svg.setAttribute('height', flow.scrollHeight); svg.style.width = flow.scrollWidth+'px'; svg.style.height = flow.scrollHeight+'px';
+  svg.innerHTML = edges().map(([ak,aid,bk,bid]) => { const a = box(ak,aid), b = box(bk,bid); if (!a||!b) return ''; const on = lit && lit.has(ak+':'+aid) && lit.has(bk+':'+bid); const mx = (a.x2+b.x1)/2; return \`<path class="\${on?'lit':''}" d="M\${a.x2} \${a.y} C \${mx} \${a.y}, \${mx} \${b.y}, \${b.x1} \${b.y}"/>\`; }).join('');
+}
+// camino conectado a un bloque
+function related(k, id){
+  const set = new Set([k+':'+id]);
+  const addStory = (sid) => { const s = storyById.get(sid); if (!s) return; set.add('story:'+sid); set.add('spec:'+sid); set.add('epic:'+s.epic); for (const r of s.requirements||[]) { const rid = reqIdsInFlow.find(x => key(x)===key(r)); if (rid) set.add('req:'+rid); } };
+  if (k==='req') for (const sid of storiesByReq.get(key(id))||[]) addStory(sid);
+  if (k==='epic') for (const s of stories.filter(s => String(s.epic)===String(id))) addStory(s.id);
+  if (k==='story'||k==='spec') addStory(id);
+  return set;
+}
+
+// ---- impactos ----------------------------------------------------------------
+function impactsSec(){
+  if (!M.impacts.length) return \`<section><h2>\${T.impacts}</h2><p class="hint">\${T.impactsHint}</p><div class="empty">\${T.noImpacts}</div></section>\`;
+  return \`<section><h2>\${T.impacts}</h2><p class="hint">\${T.impactsHint}</p><div class="cards">\${M.impacts.map(e => \`<div class="dc \${e.type==='override'?'override':'constraint'}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':'warn'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span></div><p>\${esc(e.text)}</p>
+    <div class="refs">\${e.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}\${e.stories.length?\`<span class="tag dim">→ \${T.affects}</span>\`+e.stories.map(s => \`<span class="tag acc chip" data-open="story:\${esc(s)}">Story \${esc(s)}</span>\`).join(''):''}</div></div>\`).join('')}</div></section>\`;
+}
+
+// ---- decisiones clave ----------------------------------------------------------
+function keySec(){
+  const groups = {}; for (const d of M.decisions.key) (groups[d.kind] = groups[d.kind] || []).push(d);
+  const order = ['briefs','prds','architecture','ux-designs'];
+  const body = order.filter(k => groups[k]).map(k => \`<div class="grp"><h4>\${esc(T.kind[k]||k)}</h4><div class="cards">\${groups[k].map(d => \`<div class="dc \${d.type}"><div class="h"><span class="tag \${d.type==='override'?'crit':d.type==='constraint'?'warn':d.type==='direction'?'vio':'acc'}">\${esc(T.type[d.type]||d.type)}</span>\${d.date?\`<time>\${esc(d.date)}</time>\`:''}</div><p>\${esc(d.text)}</p>\${d.refs.length?\`<div class="refs">\${d.refs.map(r => \`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div>\`:''}</div>\`).join('')}</div></div>\`).join('');
+  return \`<section><h2>\${T.key}</h2><p class="hint">\${T.keyHint}</p>\${body || \`<div class="empty">\${T.noHistory}</div>\`}</section>\`;
+}
+
+// ---- historial ----------------------------------------------------------------
+function historySec(){
+  const ev = [...M.timeline].sort((a,b) => String(a.when||'').localeCompare(String(b.when||'')));
+  if (!ev.length) return \`<section><h2>\${T.history}</h2><div class="empty">\${T.noHistory}</div></section>\`;
+  let last = null; const items = [];
+  for (const e of ev) { if (e.when !== last) { items.push(\`<li class="day">\${esc(e.when||'—')}</li>\`); last = e.when; }
+    items.push(\`<li class="t-\${esc(e.type)}"><div class="h"><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':e.type==='archived'||e.type==='generated'?'fr':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(T.kind[e.source]||e.source)}</span>\${(e.refs||[]).slice(0,6).map(r => /^Story /.test(r)?\`<span class="tag acc chip" data-open="story:\${esc(r.slice(6))}">\${esc(r)}</span>\`:\`<span class="tag fr chip" data-open="req:\${esc(r)}">\${esc(r)}</span>\`).join('')}</div><p>\${esc(e.text)}</p><small>\${esc(e.file)}</small></li>\`); }
+  return \`<section><h2>\${T.history}</h2><p class="hint">\${T.historyHint}</p><div class="card"><ul class="tl">\${items.join('')}</ul></div></section>\`;
+}
+
+// ---- drawer ----------------------------------------------------------------
+function open(k, id){
+  const d = $('#drawer'); let h = '';
+  const chips = (arr, kind, pre='') => arr.map(x => \`<span class="tag \${kind==='req'?'fr':'acc'} link" data-open="\${kind}:\${esc(x)}">\${pre}\${esc(x)}</span>\`).join('');
+  const hist = (rid) => { const ev = M.history[rid] || M.history[Object.keys(M.history).find(x => key(x)===key(rid))] || []; return ev.length ? \`<ul class="tl">\${ev.map(e => \`<li class="t-\${esc(e.type)}"><div class="h"><time>\${esc(e.when||'—')}</time><span class="tag \${e.type==='override'||e.type==='modified'?'crit':e.type==='change'?'warn':'acc'}">\${esc(T.type[e.type]||e.type)}</span><span class="tag dim">\${esc(e.source)}</span></div><p>\${esc(e.text)}</p></li>\`).join('')}</ul>\` : \`<p class="hint">\${T.noHist}</p>\`; };
+  if (k==='req') { const r = reqByKey.get(key(id)); const st = storiesByReq.get(key(id))||[]; const n = reqChanges(id);
+    h = \`<div class="dh"><span class="id">\${esc(id)}\${n?\` <span class="tag \${n>=3?'crit':'warn'}">\${n} \${T.changesN}</span>\`:''}</span><button class="x" data-close>\${T.close}</button></div><h3>\${esc(r?.text||'')}</h3>
+      <h5>\${T.covers}</h5><div class="row">\${st.length?chips(st,'story','Story '):\`<span class="tag crit">\${T.noStory}</span>\`}</div><h5>\${T.reqHistory}</h5>\${hist(id)}\`; }
+  if (k==='epic') { const e = M.epics.find(e => String(e.n)===String(id)); if (!e) return;
+    h = \`<div class="dh"><span class="id">Epic \${e.n}</span><button class="x" data-close>\${T.close}</button></div><h3>\${esc(e.title)}</h3>\${e.goal?\`<h5>\${T.goal}</h5><p>\${esc(e.goal)}</p>\`:''}<h5>\${T.storiesOf}</h5><div class="row">\${chips(e.stories.map(s=>s.id),'story','Story ')}</div>\`; }
+  if (k==='story'||k==='spec') { const s = storyById.get(id); if (!s) return; const c = specByStory.get(id);
+    h = \`<div class="dh"><span class="id">Story \${esc(s.id)} <span class="tag dim">Epic \${s.epic}</span></span><button class="x" data-close>\${T.close}</button></div><h3>\${esc(s.title)}</h3>
+      \${s.want?\`<p class="hint" style="color:var(--fg)"><b style="color:var(--acc);font-weight:500">\${T.role}</b> \${esc(s.role)}, <b style="color:var(--acc);font-weight:500">\${T.want}</b> \${esc(s.want)}\${s.benefit?\`, <b style="color:var(--acc);font-weight:500">\${T.benefit}</b> \${esc(s.benefit)}\`:''}</p>\`:''}
+      <h5>\${T.epic}</h5><div class="row"><span class="tag acc link" data-open="epic:\${s.epic}">\${esc(s.epicTitle)}</span></div>
+      <h5>\${T.reqOf}</h5><div class="row">\${(s.requirements||[]).length?chips(s.requirements,'req'):\`<span class="tag dim">—</span>\`}</div>
+      <h5>\${T.spec}</h5>\${c?\`<div class="row"><code>\${esc(c.id)}</code> <span class="st \${c.state}">\${T.state[c.state]}\${c.archivedAt?\` · \${c.archivedAt}\`:''}</span>\${c.revision>1?\`<span class="tag crit">\${T.rev} \${c.revision}</span>\`:''}</div>\${c.state!=='archived'?\`<div class="bar" style="margin-top:8px"><i style="width:\${pct(c.progress.done,c.progress.total)}%"></i></div><p class="hint">\${T.progress}: \${c.progress.done}/\${c.progress.total} \${T.tasksShort}</p>\`:''}\`:\`<span class="tag crit">\${T.state.missing}</span>\`}
+      <h5>\${T.criteriaOf} (\${s.criteria.length})</h5>\${s.criteria.map(ac => \`<div class="ac">\${ac.given?\`<div><b>\${T.given}</b>\${esc(ac.given)}</div>\`:''}\${ac.when?\`<div><b>\${T.when}</b>\${esc(ac.when)}</div>\`:''}\${ac.then?\`<div><b>\${T.then}</b>\${esc(ac.then)}</div>\`:''}\${(ac.and||[]).map(a => \`<div><b>\${T.and}</b>\${esc(a)}</div>\`).join('')}</div>\`).join('')}\`; }
+  if (!h) return;
+  d.innerHTML = h; d.classList.add('open');
+  const flow = $('#flow'); if (flow) { const lit = related(k, id); flow.classList.add('focus'); flow.querySelectorAll('.blk').forEach(b => { const kk = b.dataset.k+':'+b.dataset.id; b.classList.toggle('lit', lit.has(kk) && kk!==k+':'+id); b.classList.toggle('sel', kk===k+':'+id); }); drawWires(lit);
+    const el = flow.querySelector(\`.blk[data-k="\${k}"][data-id="\${cssEsc(id)}"]\`); if (el && !isVisible(el)) el.scrollIntoView({block:'center', behavior:'smooth'}); }
+}
+function isVisible(el){ const r = el.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }
+function closeDrawer(){ $('#drawer').classList.remove('open'); const flow = $('#flow'); if (flow) { flow.classList.remove('focus'); flow.querySelectorAll('.blk').forEach(b => b.classList.remove('lit','sel')); drawWires(null); } }
+
+// ---- render ------------------------------------------------------------------
+$('#app').innerHTML = header() + \`<main>\${glossary()}\${hero()}\${effort()}\${flow()}\${impactsSec()}\${keySec()}\${historySec()}<footer>\${T.regen}</footer></main>\`;
+drawWires(null); addEventListener('resize', () => drawWires(null));
+document.addEventListener('click', (ev) => { const o = ev.target.closest('[data-open]'); if (o) { const [k,...rest] = o.dataset.open.split(':'); open(k, rest.join(':')); return; }
+  const b = ev.target.closest('.blk'); if (b) { open(b.dataset.k, b.dataset.id); return; } if (ev.target.closest('[data-close]')) closeDrawer(); });
+document.addEventListener('keydown', (e) => { if (e.key==='Escape') closeDrawer(); });
+})();
+</script>
+</body></html>
 `;
 }

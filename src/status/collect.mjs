@@ -7,7 +7,7 @@ import { parseEpics } from '../../bridge/parse-epics.mjs';
 import { planSprint } from '../../bridge/plan-sprint.mjs';
 import { findEpics, planningRoot, findPlanningArtifacts } from '../../bridge/cli.mjs';
 import { readLedger } from '../../bridge/history.mjs';
-import { collectDecisions, instabilityRanking, refKey } from '../../bridge/decisions.mjs';
+import { collectDecisions, instabilityRanking, requirementHistory, refKey } from '../../bridge/decisions.mjs';
 import { VENDORS, readState, detectEngram, detectGraphify } from '../env.mjs';
 
 const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return null; } };
@@ -158,6 +158,102 @@ export function timeline(root, pr, changes) {
   return ev.sort((a, b) => String(b.when || '').localeCompare(String(a.when || '')));
 }
 
+// El arbol de planeacion tal como lo escribio BMAD: epics, stories y sus criterios. Es lo que
+// el flujo PRD → requisito → epic → story → spec necesita para dibujarse.
+export function epicsTree(root) {
+  const f = findEpics(root)[0];
+  if (!f) return [];
+  const doc = parseEpics(readText(f));
+  return doc.epics.map((e) => ({
+    n: e.n, title: e.title, goal: e.goal,
+    stories: e.stories.map((st) => ({
+      id: st.id, title: st.title, role: st.role, want: st.want, benefit: st.benefit,
+      requirements: st.requirements, requirementsFrom: st.requirementsFrom,
+      criteria: st.acceptanceCriteria.map((ac) => ({ given: ac.given, when: ac.when, then: ac.then, and: ac.and })),
+    })),
+  }));
+}
+
+const daysBetween = (a, b) => (a && b ? Math.round((new Date(b) - new Date(a)) / 86400000) : null);
+
+// Lo que gerencia pregunta: cuanto se ha hecho, cuanto falta, cuanto costo llegar aqui.
+// "Esfuerzo" se mide con lo que el metodo deja escrito: artefactos, decisiones registradas,
+// requisitos, stories, criterios, tareas. No con horas, que nadie registra.
+export function metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline, sprint }) {
+  const stories = epics.flatMap((e) => e.stories);
+  const scenarios = stories.reduce((n, st) => n + st.criteria.length, 0);
+  const tasks = changes.reduce((a, c) => ({ done: a.done + c.progress.done, total: a.total + c.progress.total }), { done: 0, total: 0 });
+  const active = changes.filter((c) => c.state !== 'archived');
+  const closedStories = new Set(changes.filter((c) => c.state === 'archived' || c.state === 'done').map((c) => c.story));
+  const inProgress = new Set(changes.filter((c) => c.state === 'in-progress').map((c) => c.story));
+  const fr = requirements.rows.filter((r) => r.group === 'FR');
+  const dates = [...artifacts.map((a) => dateIn(a.file)), ...timeline.map((e) => e.when)].filter(Boolean).sort();
+  const byKind = {};
+  for (const e of decisions.entries) {
+    const k = e.kind;
+    byKind[k] = byKind[k] || { entries: 0, decisions: 0, changes: 0, overrides: 0, assumptions: 0 };
+    byKind[k].entries++;
+    if (e.type === 'decision') byKind[k].decisions++;
+    if (e.type === 'change' || e.kind === 'change-proposal') byKind[k].changes++;
+    if (e.type === 'override') byKind[k].overrides++;
+    if (e.type === 'assumption') byKind[k].assumptions++;
+  }
+  const phaseDates = {};
+  for (const a of artifacts) { const d = dateIn(a.file); if (d && (!phaseDates[a.kind] || d < phaseDates[a.kind])) phaseDates[a.kind] = d; }
+  return {
+    requirements: { fr: fr.length, nfr: requirements.rows.filter((r) => r.group === 'NFR').length, ux: requirements.rows.filter((r) => r.group === 'UX-DR').length, total: requirements.rows.length,
+      covered: fr.filter((r) => r.stories.length).length, coveragePct: fr.length ? Math.round((fr.filter((r) => r.stories.length).length / fr.length) * 100) : null,
+      unstable: requirements.rows.filter((r) => r.changes >= 2).length },
+    epics: epics.length, stories: stories.length, scenarios,
+    storiesDone: closedStories.size, storiesInProgress: inProgress.size,
+    storiesPct: stories.length ? Math.round((closedStories.size / stories.length) * 100) : null,
+    tasks, tasksPct: tasks.total ? Math.round((tasks.done / tasks.total) * 100) : null,
+    changes: { total: changes.length, archived: changes.length - active.length, active: active.length, revisions: changes.filter((c) => c.revision > 1).length },
+    bridgeRuns: ledger.length,
+    decisions: { total: decisions.entries.length, byKind, overrides: decisions.entries.filter((e) => e.type === 'overrides' || e.type === 'override').length, changes: decisions.entries.filter((e) => e.type === 'change' || e.kind === 'change-proposal').length },
+    dates: { first: dates[0] || null, last: dates.at(-1) || null, days: daysBetween(dates[0], dates.at(-1)), phases: phaseDates },
+    sprint: sprint ? { waves: sprint.waves.length, current: sprint.current, ready: sprint.totals.ready } : null,
+  };
+}
+
+// Que cambio y a que le pego: cada cambio registrado (memlog, propuesta, revision del puente)
+// con los requisitos que cita y, via trace, las stories y changes que esos requisitos tocan.
+export function impacts(decisions, trace, ledger) {
+  const storiesByReq = new Map();
+  for (const c of trace?.changes || []) for (const r of c.requirements || []) {
+    const k = refKey(r);
+    if (!storiesByReq.has(k)) storiesByReq.set(k, new Set());
+    storiesByReq.get(k).add(c.bmad.story);
+  }
+  const changeByStory = new Map((trace?.changes || []).map((c) => [c.bmad.story, c.changeId]));
+  const out = [];
+  for (const e of decisions.entries) {
+    if (!(e.type === 'change' || e.type === 'override' || e.kind === 'change-proposal') || !e.refs.length) continue;
+    const stories = [...new Set(e.refs.flatMap((r) => [...(storiesByReq.get(refKey(r)) || [])]))].sort();
+    out.push({ when: e.date, source: e.kind, type: e.type, text: e.text, refs: e.refs, stories, changes: stories.map((s) => changeByStory.get(s)).filter(Boolean), file: e.file });
+  }
+  for (const run of ledger) {
+    const mod = (run.changes || []).filter((c) => c.action === 'written' && c.delta === 'MODIFIED');
+    if (!mod.length) continue;
+    const stories = mod.map((c) => c.story);
+    const refs = [...new Set((trace?.changes || []).filter((c) => stories.includes(c.bmad.story)).flatMap((c) => c.requirements || []))];
+    out.push({ when: run.at.slice(0, 10), source: 'bridge', type: 'modified', text: mod.map((c) => `${c.changeId} (rev ${c.revision})`).join(', '), refs, stories, changes: mod.map((c) => c.changeId), file: '.un-specweaver/changelog.jsonl' });
+  }
+  return out.sort((a, b) => String(b.when || '').localeCompare(String(a.when || '')));
+}
+
+// Las decisiones que hay que tener presentes: descartes con motivo primero (son las que se
+// reabren por accidente), luego decisiones y restricciones que citan un requisito, luego el
+// resto. Agrupadas por la fase que las tomo.
+export function keyDecisions(decisions, limit = 40) {
+  const weight = (e) => (e.type === 'override' ? 0 : e.type === 'constraint' ? 1 : e.type === 'decision' && e.refs.length ? 2 : e.type === 'direction' ? 3 : e.type === 'decision' ? 4 : 9);
+  return decisions.entries
+    .filter((e) => ['override', 'constraint', 'decision', 'direction'].includes(e.type) && e.kind !== 'change-proposal')
+    .map((e) => ({ kind: e.kind, artifact: e.artifact, type: e.type, text: e.text, refs: e.refs, date: e.date, file: e.file, weight: weight(e) }))
+    .sort((a, b) => a.weight - b.weight || String(a.date || '').localeCompare(String(b.date || '')))
+    .slice(0, limit);
+}
+
 export function collectStatus(root) {
   root = path.resolve(root);
   const state = readState(root);
@@ -171,16 +267,28 @@ export function collectStatus(root) {
   const g = detectGraphify(root);
   const graph = g.graph ? readJson(path.join(root, g.graph)) : null;
   const e = detectEngram(root);
+  const epics = epicsTree(root);
+  const requirements = requirementsView(root, pr, trace);
+  const sprint = sprintStatus(root, changes);
+  const ledger = readLedger(root);
+  const tl = timeline(root, pr, changes);
+  // Historia por requisito, para el detalle al hacer click. Solo los que tienen algo que contar.
+  const history = {};
+  for (const r of requirements.rows) if (r.mentions > 0) history[r.id] = requirementHistory(root, pr, r.id, trace).events;
 
   return {
     generatedAt: new Date().toISOString(),
     project: { name: trace?.project || path.basename(root), root, lang: state?.preferences?.lang || state?.lang || 'es', agents: state?.agents || [], installedAt: state?.installedAt || null, vendors: state?.vendors || null },
     phases: phases(root, artifacts, trace, changes),
-    requirements: requirementsView(root, pr, trace),
+    metrics: metrics({ artifacts, epics, requirements, changes, decisions, ledger, timeline: tl, sprint }),
+    epics,
+    requirements,
+    history,
     changes,
-    sprint: sprintStatus(root, changes),
-    decisions: { total: decisions.entries.length, sources: decisions.sources.length, byType, ranking: instabilityRanking(root, pr, trace).slice(0, 10) },
-    timeline: timeline(root, pr, changes),
+    sprint,
+    decisions: { total: decisions.entries.length, sources: decisions.sources.length, byType, ranking: instabilityRanking(root, pr, trace).slice(0, 10), key: keyDecisions(decisions) },
+    impacts: impacts(decisions, trace, ledger),
+    timeline: tl,
     graph: { available: !!g.bin, path: g.graph, html: exists(path.join(root, VENDORS.graphify.outDir, 'graph.html')) ? path.join(VENDORS.graphify.outDir, 'graph.html') : null, nodes: graph?.nodes?.length ?? null, edges: graph?.edges?.length ?? null },
     engram: { available: e.available, project: e.project },
   };

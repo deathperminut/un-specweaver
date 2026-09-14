@@ -114,11 +114,14 @@ test('el HTML es autocontenido, bilingue y escapa lo que viene de los archivos',
   for (const lang of ['es', 'en']) {
     const html = renderHtml(s, lang);
     assert.doesNotMatch(html, /<script src=|https?:\/\/cdn|<link /, 'sin CDN ni recursos externos');
-    assert.doesNotMatch(html, /<script>alert/, 'escapado');
-    assert.match(html, /&lt;script&gt;alert/);
-    assert.match(html, lang === 'es' ? /Ola 1/ : /Wave 1/);
-    assert.match(html, /FR001/);
-    assert.match(html, /2026-09-10/);
+    assert.doesNotMatch(html, /<script>alert/, 'nada de los archivos puede cerrar el script de datos');
+    assert.match(html, /\\u003cscript>alert\(1\)\\u003c\/script>/, 'va en el JSON con < escapado; el cliente lo escapa al pintar');
+    assert.match(html, /const esc = \(x\) =>/, 'el cliente escapa todo texto que viene de archivos');
+    assert.match(html, lang === 'es' ? /¿Como vamos\?/ : /How are we doing\?/);
+    assert.match(html, /"id":"FR001"/, 'el modelo va embebido');
+    assert.match(html, /"archivedAt":"2026-09-10"/);
+    assert.match(html, /data-k="story"|\.blk\[data-k/, 'el flujo se dibuja en cliente');
+    assert.match(html, /\\u003c/, 'el JSON embebido escapa < para no cerrar el script');
   }
   fs.rmSync(dir, { recursive: true, force: true });
 });
