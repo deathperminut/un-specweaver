@@ -17,6 +17,8 @@ USO
   npx un-specweaver bridge <epics.md> convierte stories de BMAD en changes de OpenSpec
   npx un-specweaver context        lista los artefactos de planeacion a cargar
   npx un-specweaver history [FR-21] historial de decisiones por requisito, o ranking de los que mas cambian
+  npx un-specweaver status [dir]   en que va el proyecto: fases, changes, sprint, requisitos, decisiones
+                                   --html escribe .un-specweaver/dashboard.html · --open lo abre · --json
   npx un-specweaver vendors           muestra las versiones pineadas
 
 INIT
@@ -68,6 +70,9 @@ function flags(argv) {
     else if (a === '--keep-going') o.keepGoing = true;
     else if (a === '--only') o.only = argv[++i].split(',').map((s) => s.trim());
     else if (a === '--skip') o.skip = argv[++i].split(',').map((s) => s.trim());
+    else if (a === '--html') o.html = true;
+    else if (a === '--open') { o.html = true; o.open = true; }
+    else if (a === '--json') o.json = true;
     else if (a === '--help' || a === '-h') o.help = true;
     else if (a === '--version' || a === '-v') o.version = true;
     else if (a.startsWith('--')) { console.error(`Opcion desconocida: ${a}`); process.exit(2); }
@@ -141,6 +146,31 @@ switch (cmd) {
     console.log(`\n${h.id} — ${h.changes} cambio(s) en ${h.events.length} evento(s)${h.stories.length ? `; stories ${h.stories.join(', ')}` : ''}\n`);
     for (const e of h.events) console.log(`  ${(e.when || '????-??-??').padEnd(10)} ${e.source.padEnd(22)} (${e.type}) ${e.text}\n             ${e.file}`);
     console.log('');
+    process.exit(0);
+  }
+
+  case 'status': {
+    // Vista derivada de lo que ya esta en disco. No guarda estado: el HTML es regenerable
+    // y va al .gitignore, igual que graph.html de graphify.
+    const { collectStatus } = await import('../src/status/collect.mjs');
+    const { renderTerminal, renderHtml } = await import('../src/status/render.mjs');
+    const root = path.resolve(o._[0] || process.cwd());
+    const model = collectStatus(root);
+    const lang = o.lang || model.project.lang;
+    if (o.json) { console.log(JSON.stringify(model, null, 2)); process.exit(0); }
+    if (o.html) {
+      const fs = await import('node:fs');
+      const out = path.join(root, '.un-specweaver', 'dashboard.html');
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      fs.writeFileSync(out, renderHtml(model, lang), 'utf8');
+      console.log(`${path.relative(root, out)} (${fs.statSync(out).size} bytes)`);
+      if (o.open) {
+        const opener = process.platform === 'darwin' ? 'open' : 'xdg-open';
+        spawnSync(opener, [out], { stdio: 'ignore' });
+      }
+      process.exit(0);
+    }
+    console.log(renderTerminal(model, lang));
     process.exit(0);
   }
 

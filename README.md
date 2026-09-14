@@ -47,7 +47,7 @@ Duplicar entre capas es como empiezan a contradecirse.
 
 ## El flujo, en comandos
 
-Nueve comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en OpenCode, `/sw-new`.
+Diez comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en OpenCode, `/sw-new`.
 
 ```
                   ┌─ /sw:new ─────────────────────────────────┐
@@ -75,6 +75,7 @@ Nueve comandos, un solo vocabulario. En Claude Code se escriben `/sw:new`; en Op
 | `/sw:ticket <n>` | issue de GitHub: clasifica y enruta a uno de los dos anteriores |
 | `/sw:sprint` | recalcula que se puede paralelizar segun dependencias reales |
 | `/sw:sync` | actualizar las herramientas de forma controlada |
+| `/sw:status` | en que va el proyecto: fases, changes con avance, olas, requisitos inestables, historial |
 | `/sw:doctor` | salud del entorno y coherencia del flujo |
 
 ---
@@ -332,6 +333,8 @@ npx un-specweaver doctor [dir]        # salud, pasos pendientes y drift de vendo
 npx un-specweaver bridge <epics.md>   # stories de BMAD -> changes de OpenSpec
 npx un-specweaver context [dir]       # artefactos de planeacion, en sus rutas reales
 npx un-specweaver history [FR-21]     # historia de un requisito, o ranking de los que mas cambian
+npx un-specweaver status [dir]        # en que va: fases, changes, sprint, requisitos, decisiones
+npx un-specweaver status --open       # lo mismo como .un-specweaver/dashboard.html, en el navegador
 npx un-specweaver vendors             # versiones pineadas
 ```
 
@@ -347,6 +350,15 @@ argumento, un ranking de los requisitos que mas han cambiado despues de nacer; c
 linea de tiempo completa con archivo y motivo. Es una vista: no guarda nada. En un proyecto real
 (150 entradas, 34 ids citados) el primero del ranking era un FR con un `(override)` que decia
 exactamente por que se descarto lo que el asistente habia sugerido — y `/sw:change` no lo veia.
+
+`status` junta todo en una pantalla: las seis fases con el artefacto que las prueba, los changes
+con su avance (casillas de `tasks.md`) y su estado (pendiente, en curso, tareas completas,
+archivado), las olas del sprint con que se puede empezar ya y que esta bloqueado por quien, los
+requisitos con cobertura e inestabilidad, las decisiones por tipo, y un historial que mezcla
+memlogs, corridas del puente y archives. `--html` escribe un archivo **autocontenido** —CSS y JS
+inline, sin CDN ni servidor— que se abre offline, en CI, o lo abre un compañero sin instalar nada.
+Es una vista: **no guarda nada** y se regenera cada vez, asi que va al `.gitignore`. Si algo se ve
+mal ahi, esta mal en la fuente.
 
 `init` acepta `--agents`, `--lang es|en`, `--dry-run`, `--yes`, `--force`, `--prune-extra`,
 `--only`, `--skip`, `--keep-going`.
@@ -369,7 +381,7 @@ nada. El plan y la ejecucion salen del mismo codigo, asi que no puede mentir.
    lo retira
 8. graphify pineado (via `uv` o `pipx`), la skill dentro del proyecto para cada agente,
    `.graphifyignore` (solo codigo), los hooks acotados, el grafo AST y el hook de post-commit
-9. Los nueve comandos `/sw:*` en el formato de cada agente, la skill `un-specweaver` en todos los
+9. Los diez comandos `/sw:*` en el formato de cada agente, la skill `un-specweaver` en todos los
    dirs de skills, y `docs/architecture-base.md`
 
 ### Prerequisitos que la herramienta NO resuelve sola
@@ -418,7 +430,7 @@ reemplaza en vez de duplicarlo). En un proyecto real la diferencia es de **499 a
 | `openspec/` — los specs son el producto | `_bmad/`, `node_modules/` |
 | `_bmad-output/` — PRD y epics | `.claude/skills/bmad-*/`, `.agents/skills/bmad-*/` |
 | `docs/architecture-base.md` | `.claude/commands/sw/`, `.opencode/commands/sw-*.md` |
-| `.un-specweaver/` — config y trazabilidad | skills y comandos de OpenSpec |
+| `.un-specweaver/` — config, trazabilidad, ledger | skills y comandos de OpenSpec; `.un-specweaver/dashboard.html` |
 | `.engram/config.json` — nombre del proyecto en Engram | `graphify-out/` — AST regenerable; el hook lo reescribe en cada commit |
 | `.graphifyignore` — el alcance del grafo es regla del equipo | `.claude/skills/graphify/`, `.opencode/skills/graphify/` |
 
@@ -559,7 +571,7 @@ Una sola duena por dato:
 ## Desarrollo
 
 ```bash
-npm test                    # 137 tests
+npm test                    # 143 tests
 npm pack                    # ~23 kB
 node bin/un-specweaver.mjs init --dry-run
 ```
@@ -573,8 +585,10 @@ implementando `status()` y `plan()`; `--dry-run`, la idempotencia y `doctor` sal
 |---|---|
 | `bridge/` — story → change | **funciona**, es/en, validado contra `openspec validate --all --strict`; `MODIFIED` + revisiones + ledger verificados contra `openspec archive` |
 | `init` / `doctor` — instalador multi-agente | **funciona**, probado end-to-end desde el tarball |
-| 9 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
+| 10 comandos `/sw:*` | **funciona**, es/en, Claude Code + OpenCode |
 | Skill `un-specweaver` | **funciona**, es/en, todos los agentes |
+| `history` — decisiones por requisito | **funciona** — memlogs + propuestas de cambio + ledger; probado sobre un proyecto real |
+| `status` / dashboard | **funciona** — terminal y HTML autocontenido, es/en |
 | Mensajes del CLI bilingües | **funciona**, 86 cadenas, es/en |
 | graphify (mapa del codigo, solo codigo) | **funciona** — instalado, acotado, grafo AST y hook; verificado contra graphify 0.8.37 |
 | Gentle-AI (binario) | **funciona** — instala via Homebrew |

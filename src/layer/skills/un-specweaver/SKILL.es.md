@@ -20,6 +20,7 @@ El puente entre ambos es deterministico: no lo improvises, ejecutalo.
 | `/sw:sprint` | repartir trabajo segun dependencias reales |
 | `/sw:build <change-id>` | construir un change |
 | `/sw:sync` | actualizar vendors de forma controlada |
+| `/sw:status` | en que va el proyecto: fases, changes, sprint, requisitos, decisiones |
 | `/sw:doctor` | diagnostico del entorno y del flujo |
 
 En OpenCode los mismos comandos son `/sw-new`, `/sw-change`, etc.
